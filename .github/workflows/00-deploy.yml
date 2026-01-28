@@ -90,7 +90,7 @@ jobs:
           mkdir -p extracted
           tar -xf dist/artifact.tar -C extracted
           rm dist/artifact.tar
-          rsync -a --delete extracted/ publish/
+          rsync -a --delete --exclude=.git extracted/ publish/
           git -C publish add -A
           git -C publish diff --cached --quiet && exit 0
           RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
