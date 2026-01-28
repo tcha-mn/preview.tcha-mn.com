@@ -25,16 +25,34 @@ permissions:
 
 jobs:
   build:
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     runs-on: ubuntu-latest
     env:
       PREVIEW_NOW: ${{ github.event.inputs.preview_date }}
     steps:
       - name: Checkout your repository using git
-        uses: actions/checkout@v4
-      - name: Install, build, and upload your site
-        uses: withastro/action@v2
+        uses: actions/checkout@v6
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build site
+        run: npm run build
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Upload site artifact for promotion
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist
+          path: dist
 
   deploy:
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -46,24 +64,8 @@ jobs:
         uses: actions/deploy-pages@v4
 
   promote:
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && github.event_name != 'repository_dispatch'
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout your repository using git
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Push to live site
-        env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-        run: |
-          mkdir --parents "$HOME/.ssh"
-          DEPLOY_KEY_FILE="$HOME/.ssh/deploy_key"
-          echo "${SSH_DEPLOY_KEY}" > "$DEPLOY_KEY_FILE"
-          chmod 600 "$DEPLOY_KEY_FILE"
- 
-          SSH_KNOWN_HOSTS_FILE="$HOME/.ssh/known_hosts"
-          ssh-keyscan -H "github.com" > "$SSH_KNOWN_HOSTS_FILE"
-          export GIT_SSH_COMMAND="ssh -i "$DEPLOY_KEY_FILE" -o UserKnownHostsFile=$SSH_KNOWN_HOSTS_FILE"
-          git push git@github.com:tcha-mn/tcha-mn.com main
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
+    needs: build
+    uses: ./.github/workflows/01-promote.yml
+    with:
+      artifact_name: site-dist

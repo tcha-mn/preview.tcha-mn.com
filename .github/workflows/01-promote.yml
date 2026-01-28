@@ -1,8 +1,13 @@
 name: Promote to Live site
 
 on:
-  # Allows you to run this workflow manually from the Actions tab on GitHub.
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: Name of the uploaded site artifact to promote.
+        required: false
+        type: string
+        default: site-dist
 
 # Allow this job to clone the repo and create a page deployment
 permissions:
@@ -15,15 +20,15 @@ jobs:
     if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
-        uses: actions/checkout@v4
+      - name: Download built site
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-      - name: Push to live site
+          name: ${{ inputs.artifact_name }}
+          path: dist
+      - name: Push to live gh-pages
         env:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         run: |
-          set -x
           mkdir --parents "$HOME/.ssh"
           DEPLOY_KEY_FILE="$HOME/.ssh/deploy_key"
           echo "${SSH_DEPLOY_KEY}" > "$DEPLOY_KEY_FILE"
@@ -32,5 +37,12 @@ jobs:
           SSH_KNOWN_HOSTS_FILE="$HOME/.ssh/known_hosts"
           ssh-keyscan -H "github.com" > "$SSH_KNOWN_HOSTS_FILE"
           export GIT_SSH_COMMAND="ssh -i "$DEPLOY_KEY_FILE" -o UserKnownHostsFile=$SSH_KNOWN_HOSTS_FILE"
-          git push git@github.com:tcha-mn/tcha-mn.com main
+          mkdir -p publish
+          cp -a dist/. publish/
+          cd publish
+          git init
+          git checkout -b gh-pages
+          git add .
+          git -c user.name="github-actions" -c user.email="actions@github.com" commit -m "Deploy $GITHUB_SHA"
+          git push --force git@github.com:tcha-mn/tcha-mn.com gh-pages
   
