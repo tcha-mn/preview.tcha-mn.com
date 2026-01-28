@@ -72,6 +72,10 @@ jobs:
         with:
           name: github-pages
           path: dist
+      - name: Extract site files
+        run: |
+          tar -xf dist/artifact.tar -C dist
+          rm dist/artifact.tar
       - name: Push to live gh-pages
         env:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
