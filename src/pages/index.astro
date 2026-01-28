@@ -17,10 +17,6 @@ import WidgetWrapper from '../components/ui/WidgetWrapper.astro';
 
 const hero = await findLocalImage('~/assets/images/brightstar-hero.jpg');
 
-const builtAt = new Date().toISOString();
-const previewNow = import.meta.env?.PREVIEW_NOW;
-const builtAsOf = previewNow ? ` (preview: ${previewNow})` : '';
-
 const metadata = {
   title: 'Twin Cities Homeschoolers for the Arts',
   ignoreTitleTemplate: true,
@@ -41,7 +37,6 @@ if (registrationIsOpen) {
 ---
 
 <Layout metadata={metadata}>
-  {Astro.raw(`<!-- Built as of ${builtAt}${builtAsOf} -->`)}
   <WidgetWrapper isDark>
     <Fragment slot="bg">
       <div class="absolute inset-0">
