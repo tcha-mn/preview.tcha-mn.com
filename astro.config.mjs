@@ -24,6 +24,9 @@ const whenExternalScripts = (items = []) =>
 export default defineConfig({
   site: SITE.site,
   base: SITE.base,
+  build: {
+    concurrency: 4,
+  },
   trailingSlash: SITE.trailingSlash ? 'always' : 'ignore',
   output: 'static',
   integrations: [
