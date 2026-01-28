@@ -67,5 +67,6 @@ jobs:
     if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
     needs: build
     uses: ./.github/workflows/01-promote.yml
+    secrets: inherit
     with:
       artifact_name: site-dist

@@ -8,6 +8,9 @@ on:
         required: false
         type: string
         default: site-dist
+    secrets:
+      SSH_DEPLOY_KEY:
+        required: true
 
 # Allow this job to clone the repo and create a page deployment
 permissions:
