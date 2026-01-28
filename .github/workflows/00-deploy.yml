@@ -63,10 +63,43 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  promote:
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
+  promote_manual:
+    name: Manually approved promotion
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
     needs: build
-    uses: ./.github/workflows/01-promote.yml
-    secrets: inherit
-    with:
-      artifact_name: site-dist
+    environment:
+      name: live
+    runs-on: ubuntu-latest
+    steps: &promote_steps
+      - name: Download built site
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: dist
+      - name: Push to live gh-pages
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        run: |
+          mkdir --parents "$HOME/.ssh"
+          DEPLOY_KEY_FILE="$HOME/.ssh/deploy_key"
+          echo "${SSH_DEPLOY_KEY}" > "$DEPLOY_KEY_FILE"
+          chmod 600 "$DEPLOY_KEY_FILE"
+
+          SSH_KNOWN_HOSTS_FILE="$HOME/.ssh/known_hosts"
+          ssh-keyscan -H "github.com" > "$SSH_KNOWN_HOSTS_FILE"
+          export GIT_SSH_COMMAND="ssh -i "$DEPLOY_KEY_FILE" -o UserKnownHostsFile=$SSH_KNOWN_HOSTS_FILE"
+          mkdir -p publish
+          cp -a dist/. publish/
+          cd publish
+          git init
+          git checkout -b gh-pages
+          git add .
+          git -c user.name="github-actions" -c user.email="actions@github.com" commit -m "Deploy $GITHUB_SHA"
+          git push --force git@github.com:tcha-mn/tcha-mn.com gh-pages
+
+  promote_auto:
+    name: Pre-approved promotion
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
+    needs: build
+    runs-on: ubuntu-latest
+    steps: *promote_steps
