@@ -88,14 +88,16 @@ jobs:
           SSH_KNOWN_HOSTS_FILE="$HOME/.ssh/known_hosts"
           ssh-keyscan -H "github.com" > "$SSH_KNOWN_HOSTS_FILE"
           export GIT_SSH_COMMAND="ssh -i "$DEPLOY_KEY_FILE" -o UserKnownHostsFile=$SSH_KNOWN_HOSTS_FILE"
-          mkdir -p publish
-          cp -a dist/. publish/
-          cd publish
-          git init
-          git checkout -b gh-pages
-          git add .
-          git -c user.name="github-actions" -c user.email="actions@github.com" commit -m "Deploy $GITHUB_SHA"
-          git push --force git@github.com:tcha-mn/tcha-mn.com gh-pages
+          git clone --branch gh-pages --single-branch git@github.com:tcha-mn/tcha-mn.com publish \
+            || { mkdir -p publish && git -C publish init && git -C publish checkout -b gh-pages && git -C publish remote add origin git@github.com:tcha-mn/tcha-mn.com; }
+          mkdir -p extracted
+          tar -xf dist/artifact.tar -C extracted
+          rsync -a --delete extracted/ publish/
+          git -C publish add -A
+          git -C publish diff --cached --quiet && exit 0
+          RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          git -C publish -c user.name="github-actions" -c user.email="actions@github.com" commit -m "Deploy $GITHUB_SHA • $RUN_URL"
+          git -C publish push origin gh-pages
 
   promote_auto:
     name: Pre-approved promotion
