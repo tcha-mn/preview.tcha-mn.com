@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build and Deploy
 
 on:
   # Trigger the workflow every time you push to the `main` branch
@@ -25,6 +25,7 @@ permissions:
 
 jobs:
   build:
+    name: Build Site
     if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     runs-on: ubuntu-latest
     env:
@@ -44,14 +45,11 @@ jobs:
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
-      - name: Upload site artifact for promotion
-        uses: actions/upload-artifact@v4
-        with:
           name: site-dist
           path: dist
 
   deploy:
+    name: Deploy to Preview Site
     if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     needs: build
     runs-on: ubuntu-latest
@@ -59,8 +57,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
 
   promote_manual:
@@ -72,9 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     steps: &promote_steps
       - name: Download built site
-        uses: actions/download-artifact@v4
+        uses: actions/download-pages-artifact@v3
         with:
-          name: ${{ inputs.artifact_name }}
+          name: site-dist
           path: dist
       - name: Push to live gh-pages
         env:
