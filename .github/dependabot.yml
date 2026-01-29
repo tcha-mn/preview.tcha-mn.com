@@ -1,0 +1,61 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      astro:
+        patterns:
+          - "@astrojs/*"
+          - "astro"
+          - "astro-icon"
+          - "@astrolib/*"
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+      fullcalendar:
+        patterns:
+          - "@fullcalendar/*"
+      sanity:
+        patterns:
+          - "@sanity/*"
+          - "sanity"
+          - "sanity-*"
+          - "groq"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "tailwind-merge"
+      flowbite:
+        patterns:
+          - "flowbite"
+          - "flowbite-*"
+      prettier:
+        patterns:
+          - "prettier"
+          - "prettier-*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      types:
+        patterns:
+          - "@types/*"
+        exclude-patterns:
+          - "@types/react"
+          - "@types/react-dom"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
