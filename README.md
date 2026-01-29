@@ -2,7 +2,7 @@
 
 Source for the TCHa (Twin Cities Habitation Alliance) website. This repo builds a static site with Astro and pulls content from Sanity.
 
-The site was originally bootstrapped from the AstroWind template (https://github.com/onwidget/astrowind).
+The site was originally bootstrapped from the AstroWind template <https://github.com/onwidget/astrowind>.
 
 ## Tech stack
 
