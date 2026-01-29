@@ -30,7 +30,7 @@
     "@sanity/astro": "^3.2.11",
     "@sanity/client": "^7.14.1",
     "@sanity/image-url": "^2.0.3",
-    "@sentry/astro": "^10.37.0",
+    "@sentry/astro": "^10.38.0",
     "@spotlightjs/astro": "^3.2.6",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
