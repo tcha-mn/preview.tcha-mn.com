@@ -5,6 +5,16 @@ on:
   # Using a different branch name? Replace `main` with your branch’s name
   push:
     branches: [ main ]
+    paths:
+      - .github/workflows/00-deploy.yml
+      - astro.config.mjs
+      - tailwind.config.cjs
+      - tsconfig.json
+      - package.json
+      - package-lock.json
+      - .npmrc
+      - public/**
+      - src/**
   # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
     inputs:
@@ -26,7 +36,6 @@ permissions:
 jobs:
   build:
     name: Build Site
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     runs-on: ubuntu-latest
     env:
       PREVIEW_NOW: ${{ github.event.inputs.preview_date }}
@@ -49,7 +58,6 @@ jobs:
 
   deploy:
     name: Deploy to Preview Site
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com'
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -91,7 +99,7 @@ jobs:
 
   promote_manual:
     name: Manually approved promotion
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
+    if: github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
     needs: [build, check_changes]
     environment:
       name: live
@@ -131,7 +139,7 @@ jobs:
 
   promote_auto:
     name: Pre-approved promotion
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
+    if: (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
     needs: [build, check_changes]
     runs-on: ubuntu-latest
     steps: *promote_steps

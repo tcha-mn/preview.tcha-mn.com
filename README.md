@@ -1,6 +1,6 @@
 # tcha-mn.com
 
-Source for the TCHa (Twin Cities Habitation Alliance) website. This repo builds a static site with Astro and pulls content from Sanity.
+Source for the TCHA (Twin Cities Homeschoolers for the Arts) website. This repo builds a static site with Astro and pulls content from Sanity.
 
 The site was originally bootstrapped from the AstroWind template <https://github.com/onwidget/astrowind>.
 
@@ -63,7 +63,7 @@ npm run preview
 
 Some content is date-gated in Sanity queries. You can override the build date using `PREVIEW_NOW` (format `YYYY-MM-DD`).
 
-- When set, `src/queries/sanity.ts` uses `PREVIEW_NOW` as a local date in `America/Chicago` (00:00:01) and converts it to UTC for groq.
+- When set, `src/queries/sanity.ts` uses `PREVIEW_NOW` as a local date in `America/Chicago` (00:00:01) and converts it to UTC for GROQ.
 - When unset, it uses the current time.
 
 Local example:
