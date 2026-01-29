@@ -59,12 +59,43 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
+  check_changes:
+    name: Check for changes
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.compare.outputs.has_changes }}
+    steps:
+      - name: Download built site
+        uses: actions/download-artifact@v7
+        with:
+          name: github-pages
+          path: dist
+      - name: Compare with live site
+        id: compare
+        run: |
+          git clone --branch gh-pages --single-branch --depth 1 https://github.com/tcha-mn/tcha-mn.com live || mkdir -p live
+          mkdir -p extracted
+          tar -xf dist/artifact.tar -C extracted
+          rm -rf live/.git
+          # Remove CNAME from comparison since it's added during deploy
+          rm -f live/CNAME
+          if diff -rq extracted live > /dev/null 2>&1; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected"
+          fi
+
   promote_manual:
     name: Manually approved promotion
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
-    needs: build
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
+    needs: [build, check_changes]
     environment:
       name: live
+      url: https://github.com/tcha-mn/tcha-mn.com/commit/gh-pages
     runs-on: ubuntu-latest
     steps: &promote_steps
       - name: Download built site
@@ -100,7 +131,7 @@ jobs:
 
   promote_auto:
     name: Pre-approved promotion
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
-    needs: build
+    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
+    needs: [build, check_changes]
     runs-on: ubuntu-latest
     steps: *promote_steps
