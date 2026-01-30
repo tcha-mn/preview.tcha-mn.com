@@ -38,6 +38,73 @@ permissions:
   id-token: write
 
 jobs:
+  decide:
+    name: Decide promotion paths
+    runs-on: ubuntu-latest
+    outputs:
+      run_check_changes: ${{ steps.decide.outputs.run_check_changes }}
+      run_promote_manual: ${{ steps.decide.outputs.run_promote_manual }}
+      run_promote_auto: ${{ steps.decide.outputs.run_promote_auto }}
+      force_publish: ${{ steps.decide.outputs.force_publish }}
+    steps:
+      - name: Compute workflow flags
+        id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PREVIEW_DATE: ${{ github.event.inputs.preview_date }}
+          FORCE_PUBLISH: ${{ github.event.inputs.force_publish }}
+        run: |
+          set -euo pipefail
+          EVENT_NAME="${EVENT_NAME:-}"
+          PREVIEW_DATE="${PREVIEW_DATE:-}"
+          FORCE_PUBLISH="${FORCE_PUBLISH:-}"
+
+          FORCE_PUBLISH_FLAG=false
+          if [ "$FORCE_PUBLISH" = "true" ]; then
+            FORCE_PUBLISH_FLAG=true
+          fi
+
+          PREVIEW_EMPTY=false
+          if [ -z "$PREVIEW_DATE" ]; then
+            PREVIEW_EMPTY=true
+          fi
+
+          RUN_CHECK_CHANGES=false
+          if [ "$PREVIEW_EMPTY" = "true" ]; then
+            if ! { [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$FORCE_PUBLISH_FLAG" = "true" ]; }; then
+              RUN_CHECK_CHANGES=true
+            fi
+          fi
+
+          RUN_PROMOTE_MANUAL=false
+          if [ "$EVENT_NAME" = "push" ] && [ "$PREVIEW_EMPTY" = "true" ]; then
+            RUN_PROMOTE_MANUAL=true
+          fi
+
+          RUN_PROMOTE_AUTO=false
+          if [ "$PREVIEW_EMPTY" = "true" ]; then
+            if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "repository_dispatch" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+              RUN_PROMOTE_AUTO=true
+            fi
+          fi
+
+          {
+            echo "run_check_changes=$RUN_CHECK_CHANGES"
+            echo "run_promote_manual=$RUN_PROMOTE_MANUAL"
+            echo "run_promote_auto=$RUN_PROMOTE_AUTO"
+            echo "force_publish=$FORCE_PUBLISH_FLAG"
+          } >> "$GITHUB_OUTPUT"
+      - name: Summary
+        run: |
+          {
+            echo "## Decide Summary"
+            echo ""
+            echo "- run_check_changes: ${{ steps.decide.outputs.run_check_changes }}"
+            echo "- run_promote_manual: ${{ steps.decide.outputs.run_promote_manual }}"
+            echo "- run_promote_auto: ${{ steps.decide.outputs.run_promote_auto }}"
+            echo "- force_publish: ${{ steps.decide.outputs.force_publish }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Build Site
     runs-on: ubuntu-latest
@@ -73,8 +140,8 @@ jobs:
 
   check_changes:
     name: Check for changes
-    if: github.repository == 'tcha-mn/preview.tcha-mn.com' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null)
-    needs: build
+    if: needs.decide.outputs.run_check_changes == 'true'
+    needs: [build, decide]
     runs-on: ubuntu-latest
     outputs:
       has_changes: ${{ steps.compare.outputs.has_changes }}
@@ -100,12 +167,36 @@ jobs:
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected"
+            diff -qr extracted live | sed -E \
+              -e 's#^Only in ([^:]+): (.+)$#\\1/\\2#' \
+              -e 's#^Files (.+) and (.+) differ$#\\1#' \
+              -e 's#^(extracted|live)/##' \
+              > changes.txt
           fi
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Change Check Summary"
+            echo ""
+            if [ "${{ steps.compare.outputs.has_changes }}" = "true" ]; then
+              echo "Changes detected."
+              echo ""
+              if [ -s changes.txt ]; then
+                echo "Changed files:"
+                sed 's/^/- /' changes.txt
+              else
+                echo "Changed files list unavailable."
+              fi
+            else
+              echo "No changes detected."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   promote_manual:
     name: Manually approved promotion
-    if: github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && (needs.check_changes.outputs.has_changes == 'true' || github.event.inputs.force_publish == 'true')
-    needs: [build, check_changes]
+    if: needs.decide.outputs.run_promote_manual == 'true' && needs.check_changes.outputs.has_changes == 'true'
+    needs: [build, check_changes, decide]
     environment:
       name: live
       url: https://github.com/tcha-mn/tcha-mn.com/commit/gh-pages
@@ -146,7 +237,7 @@ jobs:
 
   promote_auto:
     name: Pre-approved promotion
-    if: (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && (needs.check_changes.outputs.has_changes == 'true' || github.event.inputs.force_publish == 'true')
-    needs: [build, check_changes]
+    if: ${{ always() && needs.decide.outputs.run_promote_auto == 'true' && (needs.check_changes.outputs.has_changes == 'true' || needs.decide.outputs.force_publish == 'true') }}
+    needs: [build, check_changes, decide]
     runs-on: ubuntu-latest
     steps: *promote_steps
