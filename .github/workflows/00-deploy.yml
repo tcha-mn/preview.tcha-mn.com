@@ -21,6 +21,10 @@ on:
       preview_date:
         description: Date (if any) to generate the site as if it were that date.
         type: string
+      force_publish:
+        description: Publish even if no changes are detected.
+        type: boolean
+        default: false
 
   schedule:
     - cron: "8 6 * * *"
@@ -86,6 +90,7 @@ jobs:
           git clone --branch gh-pages --single-branch --depth 1 https://github.com/tcha-mn/tcha-mn.com live || mkdir -p live
           mkdir -p extracted
           tar -xf dist/artifact.tar -C extracted
+          touch extracted/.nojekyll
           rm -rf live/.git
           # Remove CNAME from comparison since it's added during deploy
           rm -f live/CNAME
@@ -99,7 +104,7 @@ jobs:
 
   promote_manual:
     name: Manually approved promotion
-    if: github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
+    if: github.event_name != 'schedule' && github.event_name != 'repository_dispatch' && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && (needs.check_changes.outputs.has_changes == 'true' || github.event.inputs.force_publish == 'true')
     needs: [build, check_changes]
     environment:
       name: live
@@ -141,7 +146,7 @@ jobs:
 
   promote_auto:
     name: Pre-approved promotion
-    if: (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && needs.check_changes.outputs.has_changes == 'true'
+    if: (github.event_name == 'schedule' || github.event_name == 'repository_dispatch') && (github.event.inputs.preview_date == '' || github.event.inputs.preview_date == null) && (needs.check_changes.outputs.has_changes == 'true' || github.event.inputs.force_publish == 'true')
     needs: [build, check_changes]
     runs-on: ubuntu-latest
     steps: *promote_steps
