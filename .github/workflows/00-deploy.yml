@@ -129,6 +129,8 @@ jobs:
           mkdir -p extracted
           tar -xf dist/artifact.tar -C extracted
           rm dist/artifact.tar
+          # Ensure GitHub Pages does not strip the _astro folder.
+          touch extracted/.nojekyll
           rsync -a --delete --exclude=.git extracted/ publish/
           echo "tcha-mn.com" > publish/CNAME
           git -C publish add -A
