@@ -22,6 +22,8 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const { page } = Astro.props;
 
+const hero = page.hero.image != null ? urlFor(page.hero.image).url() : '';
+
 const metadata: MetaDataType = {
   title: page.meta_title,
   description: page.meta_description,
@@ -29,9 +31,8 @@ const metadata: MetaDataType = {
     index: page.allow_indexing,
     follow: page.allow_indexing,
   },
+  openGraph: hero ? { images: [{ url: hero, width: 1200, height: 630 }] } : undefined,
 };
-
-const hero = page.hero.image != null ? urlFor(page.hero.image).url() : '';
 ---
 
 <Layout metadata={metadata}>

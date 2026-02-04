@@ -2,6 +2,7 @@
 import { toHTML } from '@portabletext/to-html';
 import { fetchSlugs, fetchSeasonInfo } from '../../queries/TheatreSeasons';
 import { getRelatedEvents } from '../../queries/Events';
+import { urlFor } from '../../queries/sanity';
 import Hero from '../../components/widgets/Hero.astro';
 import Layout from '../../layouts/PageLayout.astro';
 import ShowList from '../../components/theatre/List.astro';
@@ -21,9 +22,11 @@ const { season: seasonInfo, shows } = await fetchSeasonInfo({ season });
 const showEvents = Object.fromEntries(
   await Promise.all(shows.map((s) => getRelatedEvents({ show: s.slug }).then((ev) => [s.slug, ev[0]])))
 );
+const ogImage = seasonInfo.hero ? urlFor(seasonInfo.hero).url() : '';
 const metadata = {
   title: `${seasonInfo.title} | TCHA`,
   description: `See our list of shows for the ${seasonInfo.title} theatre season at TCHA.`,
+  openGraph: ogImage ? { images: [{ url: ogImage, width: 1200, height: 630 }] } : undefined,
 };
 ---
 

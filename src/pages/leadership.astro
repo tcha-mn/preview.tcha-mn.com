@@ -6,6 +6,9 @@ import { fetchByTeam } from '../queries/Leadership';
 const metadata = {
   title: 'Leadership | TCHA',
   description: 'Meet the TCHA board of directors and leadership team guiding the organization.',
+  openGraph: {
+    images: [{ url: '~/assets/images/default.png', width: 1200, height: 630 }],
+  },
 };
 
 const { board } = await fetchByTeam();

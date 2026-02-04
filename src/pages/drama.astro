@@ -11,6 +11,9 @@ const hero = await findLocalImage('~/assets/images/drama-hero.jpg');
 const metadata = {
   title: 'Drama Classes | TCHA',
   description: 'Drama classes covering acting, improv, and technical theatre for K-12 students.',
+  openGraph: {
+    images: [{ url: '~/assets/images/drama-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 ---
 

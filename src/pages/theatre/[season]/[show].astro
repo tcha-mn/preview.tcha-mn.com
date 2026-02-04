@@ -22,9 +22,11 @@ const { season, show } = Astro.params;
 const showInfo = await fetchShowInfo({ slug: show });
 const seasonInfo = await fetchOne({ season });
 const events = await getRelatedEvents({ show });
+const ogImage = showInfo.hero ? urlFor(showInfo.hero).url() : '';
 const metadata = {
   title: `${showInfo.title} | ${seasonInfo.title} | TCHA`,
   description: `Details for ${showInfo.title}, part of the ${seasonInfo.title} theatre season at TCHA.`,
+  openGraph: ogImage ? { images: [{ url: ogImage, width: 1200, height: 630 }] } : undefined,
 };
 const ticketLink = events[0]?.ticket_link;
 const hasTicketLink = Boolean(ticketLink);

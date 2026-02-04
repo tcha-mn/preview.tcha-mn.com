@@ -22,6 +22,9 @@ const metadata = {
   ignoreTitleTemplate: true,
   description:
     'Performing arts classes and opportunities for home-educated students in the Minneapolis/St. Paul area—choir, dance, drama, lessons, and theatre.',
+  openGraph: {
+    images: [{ url: '~/assets/images/brightstar-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 const sponsors = await fetchActiveSponsors();
 const testimonials = await fetchAllTestimonials();

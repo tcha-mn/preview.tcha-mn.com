@@ -13,6 +13,9 @@ const hero = await findLocalImage('~/assets/images/registration-hero.jpg');
 const metadata = {
   title: 'Class Registration | TCHA',
   description: 'Register for current classes, review policies, and see offerings open for enrollment.',
+  openGraph: {
+    images: [{ url: '~/assets/images/registration-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 const openClasses = await classesOpenForRegistration();
 ---

@@ -14,6 +14,9 @@ const metadata = {
   title: 'About us',
   description:
     "Learn about TCHA's mission, values, and key locations for classes and performances in the Twin Cities area.",
+  openGraph: {
+    images: [{ url: '~/assets/images/about-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 
 const values = await fetchAll();

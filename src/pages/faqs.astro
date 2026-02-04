@@ -21,6 +21,9 @@ const Categories = {
 const metadata = {
   title: 'FAQs',
   description: 'Answers to common questions about classes, policies, registration, and finances.',
+  openGraph: {
+    images: [{ url: '~/assets/images/faq-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 function filterFAQ(category: string) {
   return (faq: FAQ) => faq.category === category;

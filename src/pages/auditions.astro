@@ -14,6 +14,9 @@ const hero = await findLocalImage('~/assets/images/registration-hero.jpg');
 const metadata = {
   title: 'Auditions | TCHA',
   description: 'See upcoming theatre auditions, show details, and registration links for TCHA productions.',
+  openGraph: {
+    images: [{ url: '~/assets/images/registration-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 const showsWithUpcomingAuditions = await fetchAuditions();
 ---

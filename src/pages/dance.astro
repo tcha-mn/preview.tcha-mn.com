@@ -11,6 +11,9 @@ const hero = await findLocalImage('~/assets/images/dance-hero.jpg');
 const metadata = {
   title: 'Dance Classes | TCHA',
   description: 'Dance classes in ballet, lyrical, tap, and jazz for PreK-12 homeschool students.',
+  openGraph: {
+    images: [{ url: '~/assets/images/dance-hero.jpg', width: 1200, height: 630 }],
+  },
 };
 ---
 

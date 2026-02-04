@@ -16,6 +16,9 @@ const metadata = {
   title: 'Private Lessons | TCHA',
   description:
     'Find private music instructors for voice, piano, guitar, and more, including in-home and studio options.',
+  openGraph: {
+    images: [{ url: '~/assets/images/private-lessons-banner.webp', width: 1200, height: 630 }],
+  },
 };
 
 const instructors = await fetchAll();
