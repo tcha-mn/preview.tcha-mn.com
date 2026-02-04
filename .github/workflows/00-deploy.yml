@@ -172,8 +172,8 @@ jobs:
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected"
             diff -qr extracted live | sed -E \
-              -e 's#^Only in ([^:]+): (.+)$#\\1/\\2#' \
-              -e 's#^Files (.+) and (.+) differ$#\\1#' \
+              -e 's#^Only in ([^:]+): (.+)$#\1/\2#' \
+              -e 's#^Files (.+) and (.+) differ$#\1#' \
               -e 's#^(extracted|live)/##' \
               > changes.txt
           fi
