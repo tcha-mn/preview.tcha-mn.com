@@ -20,6 +20,8 @@ const hero = await findLocalImage('~/assets/images/brightstar-hero.jpg');
 const metadata = {
   title: 'Twin Cities Homeschoolers for the Arts',
   ignoreTitleTemplate: true,
+  description:
+    'Performing arts classes and opportunities for home-educated students in the Minneapolis/St. Paul area—choir, dance, drama, lessons, and theatre.',
 };
 const sponsors = await fetchActiveSponsors();
 const testimonials = await fetchAllTestimonials();

@@ -24,6 +24,7 @@ const seasonInfo = await fetchOne({ season });
 const events = await getRelatedEvents({ show });
 const metadata = {
   title: `${showInfo.title} | ${seasonInfo.title} | TCHA`,
+  description: `Details for ${showInfo.title}, part of the ${seasonInfo.title} theatre season at TCHA.`,
 };
 const ticketLink = events[0]?.ticket_link;
 const hasTicketLink = Boolean(ticketLink);
