@@ -34,7 +34,7 @@
     "@spotlightjs/astro": "^3.2.6",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "astro": "^5.17.1",
+    "astro": "^5.17.2",
     "astro-icon": "^1.1.5",
     "dayjs": "^1.11.19",
     "debug": "^4.4.3",
