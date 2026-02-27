@@ -151,7 +151,7 @@ jobs:
       has_changes: ${{ steps.compare.outputs.has_changes }}
     steps:
       - name: Download built site
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: github-pages
           path: dist
@@ -207,7 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     steps: &promote_steps
       - name: Download built site
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: github-pages
           path: dist
