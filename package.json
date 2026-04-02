@@ -9,6 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "cloudflare:redirects:check": "node scripts/sync-cloudflare-redirects.mjs --check",
+    "cloudflare:redirects:apply": "node scripts/sync-cloudflare-redirects.mjs --apply",
     "format": "prettier -w .",
     "lint": "npm run lint:astro && npm run lint:eslint",
     "lint:astro": "astro check",

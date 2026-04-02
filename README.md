@@ -108,6 +108,8 @@ Promotion pushes the Pages artifact to the live repo’s `gh-pages` branch and p
 In the preview repo:
 
 - `SSH_DEPLOY_KEY` secret with write access to the live repo.
+- `CLOUDFLARE_API_TOKEN` secret with at least `Dynamic URL Redirects Write` for the `tcha-mn.com` zone.
+- `CLOUDFLARE_ZONE_ID` secret for the `tcha-mn.com` Cloudflare zone.
 - `live` environment configured with required reviewers (for manual promotions).
 
 In the live repo:
@@ -118,3 +120,24 @@ In the live repo:
 
 - The [preview site](https://preview.tcha-mn.com) is password-protected via Cloudflare. The [live site](https://tcha-mn.com) is publicly accessible.
 - The workflow run URL is recorded in the live `gh-pages` commit message for traceability.
+
+## Cloudflare redirects
+
+Workflow: `.github/workflows/02-cloudflare-redirects.yml`
+
+- Redirect definitions live in Sanity as published `redirects` documents in `../sanity-studio`.
+- A `path` ending in `*` is treated as a trailing-wildcard/prefix match.
+- The redirect sync workflow is manual-only and accepts `mode=check` or `mode=apply`.
+- `check` validates the currently published Sanity redirects without touching Cloudflare.
+- `apply` reads the same published Sanity redirects and updates Cloudflare through the Rulesets API.
+- The sync script manages the `http_request_dynamic_redirect` phase, which is the same phase Cloudflare uses for Single Redirects.
+- The current Sanity schema only allows `301` and `302` status codes.
+
+The repo no longer stores redirect data. It only contains the sync workflow and the script that converts published Sanity redirects into Cloudflare redirect rules. By default, the sync preserves any existing Cloudflare redirect rules that do not use this repo's managed `ref` prefix.
+
+Useful commands:
+
+```
+npm run cloudflare:redirects:check
+npm run cloudflare:redirects:apply
+```
