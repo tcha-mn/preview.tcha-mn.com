@@ -114,9 +114,7 @@ export const headerData = {
       ],
     },
   ],
-  actions: [
-    { text: 'Donate', href: 'https://www.paypal.com/donate/?hosted_button_id=6PSJWMWAEXSC2', target: '_blank' },
-  ],
+  actions: [{ text: 'Donate', href: '/donate', target: '_blank' }],
 };
 
 export const footerData = {
