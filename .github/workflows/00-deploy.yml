@@ -126,10 +126,23 @@ jobs:
         run: npm ci
       - name: Build site
         run: npm run build
+      - name: Package GitHub Pages artifact
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude='.[^/]*' \
+            --directory dist \
+            -cvf "$RUNNER_TEMP/artifact.tar" \
+            .
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          path: dist
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     name: Deploy to Preview Site
