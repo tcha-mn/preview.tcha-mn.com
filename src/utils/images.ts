@@ -1,6 +1,6 @@
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import type { OpenGraph } from '@astrolib/seo';
+import type { OpenGraph } from './seo';
 
 const load = async function () {
   try {

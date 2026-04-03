@@ -10,7 +10,11 @@ updates:
           - "@astrojs/*"
           - "astro"
           - "astro-icon"
-          - "@astrolib/*"
+          - "@sanity/astro"
+          - "@sentry/astro"
+          - "@spotlightjs/astro"
+          - "eslint-plugin-astro"
+          - "prettier-plugin-astro"
       eslint:
         patterns:
           - "eslint"
