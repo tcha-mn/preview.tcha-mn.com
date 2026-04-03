@@ -59,7 +59,7 @@
     "@iconify-json/flat-color-icons": "^1.2.3",
     "@iconify-json/tabler": "^1.2.26",
     "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.1.18",
+    "@tailwindcss/vite": "^4.2.2",
     "@types/js-yaml": "^4.0.9",
     "@types/listify": "^1.0.2",
     "@types/lodash.merge": "^4.6.9",
@@ -75,8 +75,8 @@
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.18",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
   },
   "engines": {
