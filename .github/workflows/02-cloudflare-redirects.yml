@@ -11,6 +11,9 @@ on:
         options:
           - check
           - apply
+  repository_dispatch:
+    types:
+      - sync-redirects
 
 concurrency:
   group: cloudflare-redirects
