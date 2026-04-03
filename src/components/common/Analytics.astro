@@ -4,6 +4,14 @@ import { ANALYTICS } from '~/utils/config';
 const googleAnalyticsId = ANALYTICS?.vendors?.googleAnalytics?.id;
 const partytown = ANALYTICS?.vendors?.googleAnalytics?.partytown ?? false;
 const scriptAttrs = partytown ? { type: 'text/partytown' } : {};
+const googleAnalyticsInitScript = googleAnalyticsId
+  ? `
+window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', ${JSON.stringify(String(googleAnalyticsId))});
+`.trim()
+  : '';
 ---
 
 {
@@ -14,16 +22,8 @@ const scriptAttrs = partytown ? { type: 'text/partytown' } : {};
         async
         src={`https://www.googletagmanager.com/gtag/js?id=${String(googleAnalyticsId)}`}
         {...scriptAttrs}
-      ></script>
-
-      <script is:inline define:vars={{ id: String(googleAnalyticsId) }} {...scriptAttrs}>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() {
-          window.dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', id);
-      </script>
+      />
+      <script is:inline set:html={googleAnalyticsInitScript} {...scriptAttrs} />
     </>
   ) : null
 }

@@ -1,4 +1,4 @@
-@config '../../../tailwind.config.cjs';
+@config '../../../tailwind.config.js';
 
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);

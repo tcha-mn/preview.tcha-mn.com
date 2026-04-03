@@ -1,6 +1,9 @@
-const defaultTheme = require('tailwindcss/defaultTheme');
+import defaultTheme from 'tailwindcss/defaultTheme';
+import typography from '@tailwindcss/typography';
+import flowbitePlugin from 'flowbite/plugin';
+import flowbiteTypography from 'flowbite-typography';
 
-module.exports = {
+export default {
   content: [
     './src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}',
     './node_modules/flowbite/**/*.js',
@@ -24,6 +27,6 @@ module.exports = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('flowbite/plugin'), require('flowbite-typography')],
+  plugins: [typography, flowbitePlugin, flowbiteTypography],
   darkMode: 'class',
 };

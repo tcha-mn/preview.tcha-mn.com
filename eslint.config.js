@@ -1,5 +1,9 @@
-const js = require('@eslint/js');
-const { FlatCompat } = require('@eslint/eslintrc');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import js from '@eslint/js';
+import { FlatCompat } from '@eslint/eslintrc';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -7,7 +11,7 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-module.exports = [
+export default [
   {
     ignores: ['dist', 'node_modules', '.github', 'types.generated.d.ts', '.astro/**', '**/.astro/**'],
   },
