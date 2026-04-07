@@ -6,11 +6,11 @@ on:
       mode:
         description: Whether to validate the published Sanity redirects or apply them to Cloudflare.
         required: true
-        default: check
+        default: apply
         type: choice
         options:
-          - check
           - apply
+          - check
   repository_dispatch:
     types:
       - sync-redirects
@@ -40,5 +40,5 @@ jobs:
       - name: Sync redirects
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
         run: node scripts/sync-cloudflare-redirects.mjs --${MODE}
