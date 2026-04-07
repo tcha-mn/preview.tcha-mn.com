@@ -40,7 +40,7 @@ function parseArgs(argv) {
 
 function asNonEmptyString(value, label) {
   if (typeof value !== 'string' || value.trim() === '') {
-    throw new Error(`${label} must be a non-empty string.`);
+    throw new TypeError(`${label} must be a non-empty string.`);
   }
 
   return value.trim();
@@ -48,7 +48,7 @@ function asNonEmptyString(value, label) {
 
 function asInteger(value, label) {
   if (!Number.isInteger(value)) {
-    throw new Error(`${label} must be an integer.`);
+    throw new TypeError(`${label} must be an integer.`);
   }
 
   return value;
@@ -58,22 +58,17 @@ function cfString(value) {
   return JSON.stringify(value);
 }
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function sanitizeRefSegment(value) {
   const sanitized = value
     .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+    .replaceAll(/[^a-z0-9_-]+/g, '_')
+    .replaceAll(/(^_+)|(_+$)/g, '');
   return sanitized || 'redirect';
 }
 
 function buildPathCondition(requestPath) {
   if (requestPath.endsWith('*')) {
-    const prefix = requestPath.slice(0, -1);
-    return `http.request.uri.path matches ${cfString(`^${escapeRegex(prefix)}.*$`)}`;
+    return `http.request.uri.path wildcard ${cfString(requestPath)}`;
   }
 
   return `http.request.uri.path eq ${cfString(requestPath)}`;
@@ -132,15 +127,31 @@ function extractRequestPathsFromExpression(expression) {
     paths.add(match[1]);
   }
 
-  const wildcardMatches = expression.matchAll(/http\.request\.uri\.path matches "\^(.*?)\.\*\$"/g);
-  for (const match of wildcardMatches) {
-    const rawPrefix = match[1].replace(/\\([.*+?^${}()|[\]\\])/g, '$1');
+  const regexPathMatches = expression.matchAll(/http\.request\.uri\.path matches "\^(.*?)\.\*\$"/g);
+  for (const match of regexPathMatches) {
+    const rawPrefix = match[1].replaceAll(/\\([.*+?^${}()|[\]\\])/g, '$1');
     paths.add(`${rawPrefix}*`);
   }
 
-  const fullUriWildcardMatches = expression.matchAll(/http\.request\.full_uri wildcard r"https:\/\/[^/]+(.*?)"/g);
+  const pathWildcardMatches = expression.matchAll(
+    /http\.request\.uri\.path (?:strict )?wildcard (?:r"([^"]*)"|"([^"]*)")/g
+  );
+  for (const match of pathWildcardMatches) {
+    const wildcardPath = match[1] || match[2];
+    if (wildcardPath) {
+      paths.add(wildcardPath);
+    }
+  }
+
+  const fullUriWildcardMatches = expression.matchAll(
+    /http\.request\.full_uri (?:strict )?wildcard (?:r"([^"]*)"|"([^"]*)")/g
+  );
   for (const match of fullUriWildcardMatches) {
-    paths.add(match[1]);
+    const wildcardUrl = match[1] || match[2];
+    const pathMatch = new RegExp(/^[a-z*]+:\/\/[^/]+(\/.*)$/i).exec(wildcardUrl);
+    if (pathMatch) {
+      paths.add(pathMatch[1]);
+    }
   }
 
   return Array.from(paths);
@@ -363,17 +374,14 @@ async function loadSanityRedirects() {
 
   if (!response.ok) {
     const details =
-      payload?.error?.description ||
-      payload?.error ||
-      payload?.message ||
-      `${response.status} ${response.statusText}`;
+      payload?.error?.description || payload?.error || payload?.message || `${response.status} ${response.statusText}`;
     throw new Error(`Sanity query failed: ${details}`);
   }
 
   const result = payload?.result;
 
   if (!Array.isArray(result)) {
-    throw new Error('Sanity redirects query returned an unexpected result.');
+    throw new TypeError('Sanity redirects query returned an unexpected result.');
   }
 
   return result.map((entry, index) => normalizeSanityRedirect(entry, index));
@@ -519,7 +527,4 @@ async function main() {
   console.log(`Cloudflare redirect ruleset updated successfully: ${updated.id} (version ${updated.version}).`);
 }
 
-main().catch((error) => {
-  console.error(error.message);
-  process.exit(1);
-});
+await main();
