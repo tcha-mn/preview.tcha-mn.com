@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import process from 'node:process';
-import { createClient } from '@sanity/client';
 
 const API_BASE_URL = 'https://api.cloudflare.com/client/v4';
 const PHASE = 'http_request_dynamic_redirect';
@@ -13,6 +12,7 @@ const PRESERVE_UNMANAGED_RULES = true;
 const SANITY_PROJECT_ID = process.env.SANITY_PROJECT_ID || 'fzxx7ejh';
 const SANITY_DATASET = process.env.SANITY_DATASET || 'production';
 const SANITY_API_VERSION = process.env.SANITY_API_VERSION || '2024-05-07';
+const SANITY_API_TOKEN = process.env.SANITY_API_TOKEN;
 const SANITY_REDIRECTS_QUERY =
   '*[_type == "redirects" && enabled == true] | order(name asc){_id,name,paths,statusCode,target{type,url,file{asset->{url}}}}';
 
@@ -101,6 +101,13 @@ function buildExpression({ hosts, paths }) {
 
 function sanitizeRuleForPut(rule) {
   return Object.fromEntries(Object.entries(rule).filter(([key]) => !READ_ONLY_RULE_FIELDS.has(key)));
+}
+
+function buildSanityQueryUrl(query) {
+  const url = new URL(`https://${SANITY_PROJECT_ID}.api.sanity.io/v${SANITY_API_VERSION}/data/query/${SANITY_DATASET}`);
+  url.searchParams.set('query', query);
+  url.searchParams.set('perspective', 'published');
+  return url;
 }
 
 function summarizeRule(rule) {
@@ -345,15 +352,25 @@ function buildManagedRules(redirects) {
 }
 
 async function loadSanityRedirects() {
-  const client = createClient({
-    projectId: SANITY_PROJECT_ID,
-    dataset: SANITY_DATASET,
-    apiVersion: SANITY_API_VERSION,
-    perspective: 'published',
-    useCdn: false,
+  const response = await fetch(buildSanityQueryUrl(SANITY_REDIRECTS_QUERY), {
+    headers: SANITY_API_TOKEN
+      ? {
+          Authorization: `Bearer ${SANITY_API_TOKEN}`,
+        }
+      : undefined,
   });
+  const payload = await response.json().catch(() => null);
 
-  const result = await client.fetch(SANITY_REDIRECTS_QUERY);
+  if (!response.ok) {
+    const details =
+      payload?.error?.description ||
+      payload?.error ||
+      payload?.message ||
+      `${response.status} ${response.statusText}`;
+    throw new Error(`Sanity query failed: ${details}`);
+  }
+
+  const result = payload?.result;
 
   if (!Array.isArray(result)) {
     throw new Error('Sanity redirects query returned an unexpected result.');
