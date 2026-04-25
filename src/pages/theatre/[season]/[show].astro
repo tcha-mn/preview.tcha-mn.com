@@ -2,6 +2,7 @@
 import { toHTML } from '@portabletext/to-html';
 import { urlFor } from '../../../queries/sanity';
 import { DateTime } from 'luxon';
+import { Icon } from 'astro-icon/components';
 
 import Hero from '../../../components/widgets/Hero.astro';
 import Layout from '../../../layouts/PageLayout.astro';
@@ -31,8 +32,44 @@ const metadata = {
 const ticketLink = events[0]?.ticket_link;
 const hasTicketLink = Boolean(ticketLink);
 const hasProgramPdf = Boolean(showInfo.program_pdf);
+const youtubeRecordingUrl = showInfo.youtube_recording_url ?? undefined;
+const hasYoutubeRecording = Boolean(youtubeRecordingUrl);
+const youtubeEmbedUrl = getYoutubeEmbedUrl(youtubeRecordingUrl);
+
 function formatDate(date: DateTime): string {
   return date.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY);
+}
+
+function getYoutubeEmbedUrl(url?: string | null): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    const hostname = parsedUrl.hostname.replace(/^www\./, '');
+    const isYoutubeHost = hostname === 'youtube.com' || hostname.endsWith('.youtube.com');
+    const isShortYoutubeHost = hostname === 'youtu.be';
+
+    if (isShortYoutubeHost) {
+      const videoId = parsedUrl.pathname.split('/').filter(Boolean)[0];
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : undefined;
+    }
+
+    if (!isYoutubeHost) {
+      return undefined;
+    }
+
+    if (parsedUrl.pathname.startsWith('/embed/')) {
+      const videoId = parsedUrl.pathname.split('/').filter(Boolean)[1];
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : undefined;
+    }
+
+    const videoId = parsedUrl.searchParams.get('v');
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : undefined;
+  } catch {
+    return undefined;
+  }
 }
 ---
 
@@ -49,7 +86,7 @@ function formatDate(date: DateTime): string {
     </Fragment>
     <Fragment slot="content">
       {
-        (hasTicketLink || hasProgramPdf) && (
+        (hasTicketLink || hasProgramPdf || hasYoutubeRecording) && (
           <div class="m-4 flex flex-wrap items-center justify-center gap-4">
             {hasTicketLink && (
               <a
@@ -67,6 +104,17 @@ function formatDate(date: DateTime): string {
                 Download Playbill
               </a>
             )}
+            {hasYoutubeRecording && (
+              <a
+                class="btn-secondary bg-secondary text-primary hover:bg-darkMode focus:bg-darkMode dark:hover:bg-primary inline-flex items-center gap-x-1 rounded-lg px-3 py-2 text-center font-medium hover:text-white focus:text-white focus:outline-none"
+                href={youtubeRecordingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="tabler:brand-youtube" class="-ml-0.5 h-5 w-5" />
+                Watch Recording
+              </a>
+            )}
           </div>
         )
       }
@@ -75,6 +123,25 @@ function formatDate(date: DateTime): string {
   <section class="mx-auto max-w-4xl px-6 pb-12 sm:px-6 sm:pb-16 lg:pb-20">
     <h3 id="synopsis" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Synopsis</h3>
     <p class="my-2" set:html={toHTML(showInfo.description)} />
+    {
+      youtubeEmbedUrl && (
+        <section aria-labelledby="recording" class="my-8">
+          <h3 id="recording" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">
+            Recording
+          </h3>
+          <div class="aspect-video overflow-hidden rounded-lg bg-slate-900 shadow-lg">
+            <iframe
+              class="h-full w-full"
+              src={youtubeEmbedUrl}
+              title={`${showInfo.title} recording`}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </section>
+      )
+    }
     {
       showInfo.participation_is_open && showInfo.participation && (
         <>
