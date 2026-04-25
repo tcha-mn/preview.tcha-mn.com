@@ -6,6 +6,9 @@ import { fetchMenuPages } from '~/queries/Pages';
 const seasons = await fetchAllSeasons();
 const pages = await fetchMenuPages();
 
+/** @type {import('./types').CallToAction[]} */
+const headerActions = [{ text: 'Donate', action: 'givebutter-donate' }];
+
 const getPageMenuItems = (menu) => {
   let menuItems = pages
     .filter((page) => page.menu_dropdown == menu)
@@ -114,7 +117,7 @@ export const headerData = {
       ],
     },
   ],
-  actions: [{ text: 'Donate', href: '/donate', target: '_blank' }],
+  actions: headerActions,
 };
 
 export const footerData = {

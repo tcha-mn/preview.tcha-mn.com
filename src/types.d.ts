@@ -153,6 +153,7 @@ export interface Disclaimer {
 // COMPONENTS
 export interface CallToAction extends HTMLAttributes<a> {
   variant?: 'primary' | 'secondary' | 'accent' | 'tertiary' | 'transparent' | 'link';
+  action?: 'givebutter-donate';
   text?: string;
   icon?: string;
   classes?: Record<string, string>;

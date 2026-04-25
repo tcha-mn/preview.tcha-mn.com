@@ -1,0 +1,190 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<script>
+  const GIVEBUTTER_SCRIPT_SRC = 'https://widgets.givebutter.com/latest.umd.cjs?acct=k8MExR3ahmL0Tf1o&p=other';
+
+  type DonateWindow = Window & {
+    __giveButterDonateModalInitialized?: boolean;
+    __giveButterDonateLastTrigger?: HTMLElement | null;
+  };
+
+  const donateWindow = window as DonateWindow;
+
+  if (!donateWindow.__giveButterDonateModalInitialized) {
+    donateWindow.__giveButterDonateModalInitialized = true;
+
+    const modalId = 'givebutter-donate-modal';
+    const triggerSelector = '[data-givebutter-donate-trigger]';
+    const closeSelector = '[data-givebutter-donate-close]';
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+
+    const getModal = () => document.getElementById(modalId);
+
+    const isOpen = (modal: HTMLElement | null) => Boolean(modal && !modal.classList.contains('hidden'));
+
+    const ensureGiveButterScript = () => {
+      if (customElements.get('givebutter-widget')) {
+        return;
+      }
+
+      if (document.querySelector<HTMLScriptElement>(`script[src="${GIVEBUTTER_SCRIPT_SRC}"]`)) {
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = GIVEBUTTER_SCRIPT_SRC;
+      document.head.appendChild(script);
+    };
+
+    const closeMobileMenu = () => {
+      document.querySelector('[data-aw-toggle-menu]')?.classList.remove('expanded');
+      document.getElementById('header')?.classList.remove('h-screen', 'expanded');
+      document.querySelector('#header nav')?.classList.add('hidden');
+      document.querySelector('#header > div > div:last-child')?.classList.add('hidden');
+    };
+
+    const getFocusableElements = (modal: HTMLElement) =>
+      Array.from(modal.querySelectorAll<HTMLElement>(focusableSelector)).filter((element) => {
+        return !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true';
+      });
+
+    const openDonateModal = (trigger: HTMLElement) => {
+      const modal = getModal();
+      if (!modal) {
+        return;
+      }
+
+      closeMobileMenu();
+      ensureGiveButterScript();
+
+      donateWindow.__giveButterDonateLastTrigger = trigger;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('overflow-hidden');
+
+      window.requestAnimationFrame(() => {
+        modal.querySelector<HTMLElement>(closeSelector)?.focus({ preventScroll: true });
+      });
+    };
+
+    const closeDonateModal = ({ restoreFocus = true } = {}) => {
+      const modal = getModal();
+
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      document.body.classList.remove('overflow-hidden');
+
+      const previousTrigger = donateWindow.__giveButterDonateLastTrigger;
+      donateWindow.__giveButterDonateLastTrigger = null;
+
+      if (restoreFocus && previousTrigger?.isConnected) {
+        previousTrigger.focus({ preventScroll: true });
+      }
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const trigger = target.closest<HTMLElement>(triggerSelector);
+      if (trigger) {
+        event.preventDefault();
+        openDonateModal(trigger);
+        return;
+      }
+
+      if (target.closest(closeSelector)) {
+        event.preventDefault();
+        closeDonateModal();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      const modal = getModal();
+      if (!isOpen(modal)) {
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeDonateModal();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !modal) {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(modal);
+      if (!focusableElements.length) {
+        event.preventDefault();
+        modal.focus({ preventScroll: true });
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus({ preventScroll: true });
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus({ preventScroll: true });
+      }
+    });
+
+    const hydrateDonateModal = () => {
+      ensureGiveButterScript();
+      closeDonateModal({ restoreFocus: false });
+    };
+
+    document.addEventListener('astro:page-load', hydrateDonateModal);
+    document.addEventListener('astro:after-swap', hydrateDonateModal);
+    ensureGiveButterScript();
+  }
+</script>
+
+<div
+  id="givebutter-donate-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="givebutter-donate-title"
+  aria-hidden="true"
+  tabindex="-1"
+  class="fixed inset-0 z-[60] hidden items-center justify-center overflow-y-auto px-4 py-8"
+>
+  <div aria-hidden="true" data-givebutter-donate-close class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="relative z-10 w-full max-w-[480px]">
+    <h2 id="givebutter-donate-title" class="sr-only">Donation form</h2>
+    <button
+      type="button"
+      aria-label="Close donation form"
+      title="Close"
+      data-givebutter-donate-close
+      class="focus:ring-primary absolute -top-5 right-2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow hover:bg-white hover:text-gray-900 focus:ring-2 focus:outline-none dark:bg-gray-800/90 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      <Icon name="tabler:x" class="h-5 w-5" />
+    </button>
+    <div class="max-h-[calc(100dvh-4rem)] overflow-y-auto rounded-lg bg-white p-2 shadow-2xl dark:bg-gray-950 sm:p-4">
+      <givebutter-widget id="pnVedV"></givebutter-widget>
+    </div>
+  </div>
+</div>

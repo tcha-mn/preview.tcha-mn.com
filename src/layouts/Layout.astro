@@ -13,6 +13,7 @@ import Analytics from '../components/common/Analytics.astro';
 import ApplyColorMode from '../components/common/ApplyColorMode.astro';
 import BasicScripts from '../components/common/BasicScripts.astro';
 import CommonMeta from '../components/common/CommonMeta.astro';
+import GiveButterDonateModal from '../components/common/GiveButterDonateModal.astro';
 import Metadata from '../components/common/Metadata.astro';
 import SiteVerification from '../components/common/SiteVerification.astro';
 
@@ -39,6 +40,7 @@ const { language, textDirection } = I18N;
     <Analytics />
     <ClientRouter fallback="swap" />
     <script src="https://tally.so/widgets/embed.js"></script>
+    <script is:inline async src="https://widgets.givebutter.com/latest.umd.cjs?acct=k8MExR3ahmL0Tf1o&p=other"></script>
   </head>
 
   <body class="bg-page text-default tracking-tight antialiased">
@@ -52,6 +54,7 @@ const { language, textDirection } = I18N;
       document.addEventListener('astro:page-load', hydrateFlowbite);
       document.addEventListener('astro:after-swap', hydrateFlowbite);
     </script>
+    <GiveButterDonateModal />
     <Subscribe />
   </body>
 </html>
