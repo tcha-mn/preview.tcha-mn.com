@@ -161,7 +161,7 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
     </Fragment>
   </Hero>
   <section class="mx-auto max-w-4xl px-6 pb-12 sm:px-6 sm:pb-16 lg:pb-20">
-    <h3 id="synopsis" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Synopsis</h3>
+    <h3 id="synopsis" class="my-2 scroll-mt-24 text-base font-bold sm:text-xl dark:text-slate-300">Synopsis</h3>
     <p class="my-2" set:html={toHTML(showInfo.description)} />
     {
       showInfo.participation_is_open && showInfo.participation && (
@@ -184,7 +184,7 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
     {
       directors.length > 0 && (
         <section aria-labelledby="directors" class="my-10">
-          <h3 id="directors" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">
+          <h3 id="directors" class="my-2 scroll-mt-24 text-base font-bold sm:text-xl dark:text-slate-300">
             {directorsHeading}
           </h3>
           <ul class="mt-4 space-y-8">
@@ -263,7 +263,7 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
     {
       youtubeEmbedUrl && (
         <section aria-labelledby="recording" class="my-8">
-          <h3 id="recording" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">
+          <h3 id="recording" class="my-2 scroll-mt-24 text-base font-bold sm:text-xl dark:text-slate-300">
             Recording
           </h3>
           <div class="aspect-video overflow-hidden rounded-lg bg-slate-900 shadow-lg">
@@ -314,21 +314,26 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
     </script>
     {
       showInfo.gallery?.images?.length > 0 && (
-        <div id="gallery" class="container mx-auto my-8 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
-          {showInfo.gallery?.images.map((image) => (
-            <>
-              <a
-                href={urlFor(image).url()}
-                data-pswp-width={image.asset.metadata.dimensions.width}
-                data-pswp-height={image.asset.metadata.dimensions.height}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <SanityImage image={image} className="mb-4" />
-              </a>
-            </>
-          ))}
-        </div>
+        <section aria-labelledby="photos" class="my-8">
+          <h3 id="photos" class="my-2 scroll-mt-24 text-base font-bold sm:text-xl dark:text-slate-300">
+            Photos
+          </h3>
+          <div id="gallery" class="container mx-auto mt-4 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
+            {showInfo.gallery?.images.map((image) => (
+              <>
+                <a
+                  href={urlFor(image).url()}
+                  data-pswp-width={image.asset.metadata.dimensions.width}
+                  data-pswp-height={image.asset.metadata.dimensions.height}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <SanityImage image={image} className="mb-4" />
+                </a>
+              </>
+            ))}
+          </div>
+        </section>
       )
     }
     <script>
