@@ -35,6 +35,46 @@ const hasProgramPdf = Boolean(showInfo.program_pdf);
 const youtubeRecordingUrl = showInfo.youtube_recording_url ?? undefined;
 const hasYoutubeRecording = Boolean(youtubeRecordingUrl);
 const youtubeEmbedUrl = getYoutubeEmbedUrl(youtubeRecordingUrl);
+type Director = NonNullable<NonNullable<typeof showInfo.directors>[number]>;
+const directors =
+  showInfo.directors?.filter(
+    (director): director is Director => Boolean(director?.name || director?.bio?.length || director?.headshot)
+  ) ?? [];
+const directorsHeading = directors.length === 1 ? 'Director' : 'Directors';
+const DIRECTOR_BIO_PREVIEW_LENGTH = 420;
+
+interface PortableTextChildWithText {
+  text?: unknown;
+}
+
+interface PortableTextBlockWithChildren {
+  children?: PortableTextChildWithText[];
+}
+
+function getDirectorBioId(director: Director): string {
+  return `director-bio-${director._id.replace(/[^A-Za-z0-9_-]/g, '-')}`;
+}
+
+function getDirectorBioPreview(bio?: Director['bio']): { isLong: boolean; text: string } {
+  const text =
+    bio
+      ?.flatMap((block) => {
+        const children = (block as PortableTextBlockWithChildren).children;
+        return Array.isArray(children) ? children.map((child) => (typeof child.text === 'string' ? child.text : '')) : [];
+      })
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim() ?? '';
+
+  if (text.length <= DIRECTOR_BIO_PREVIEW_LENGTH) {
+    return { isLong: false, text };
+  }
+
+  return {
+    isLong: true,
+    text: `${text.slice(0, DIRECTOR_BIO_PREVIEW_LENGTH).replace(/\s+\S*$/, '')}...`,
+  };
+}
 
 function formatDate(date: DateTime): string {
   return date.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY);
@@ -124,6 +164,103 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
     <h3 id="synopsis" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Synopsis</h3>
     <p class="my-2" set:html={toHTML(showInfo.description)} />
     {
+      showInfo.participation_is_open && showInfo.participation && (
+        <>
+          <h3 class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Auditions</h3>
+          <p class="my-2" set:html={toHTML(showInfo.participation.details)} />
+          {showInfo.participation.registration_link && (
+            <a
+              class="btn-secondary mt-4"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={showInfo.participation.registration_link}
+            >
+              Audition Information
+            </a>
+          )}
+        </>
+      )
+    }
+    {
+      directors.length > 0 && (
+        <section aria-labelledby="directors" class="my-10">
+          <h3 id="directors" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">
+            {directorsHeading}
+          </h3>
+          <ul class="mt-4 space-y-8">
+            {directors.map((director) => {
+              const bioPreview = getDirectorBioPreview(director.bio);
+              const bioId = getDirectorBioId(director);
+
+              return (
+                <li>
+                  <article class="mx-auto max-w-md md:max-w-none">
+                    <div class="flex flex-wrap gap-6">
+                      {director.headshot && (
+                        <div class="grow basis-full sm:grow-0 sm:basis-40">
+                          <SanityImage
+                            image={director.headshot}
+                            alt={director.name ?? 'Director headshot'}
+                            className="aspect-square w-full rounded-md object-cover"
+                            width={384}
+                            height={384}
+                            sizes="(min-width: 640px) 10rem, calc(100vw - 4rem)"
+                            mode="cover"
+                          />
+                        </div>
+                      )}
+                      <div class="mt-2 grow basis-7/12">
+                        {director.name && (
+                          <h4 class="font-heading mb-2 text-xl leading-tight font-bold sm:text-2xl dark:text-slate-300">
+                            {director.name}
+                          </h4>
+                        )}
+                        {director.bio && director.bio.length > 0 && (
+                          <div data-director-bio>
+                            {bioPreview.isLong ? (
+                              <>
+                                <div class="prose mt-3 max-w-none dark:prose-invert" data-director-bio-preview>
+                                  <p>{bioPreview.text}</p>
+                                </div>
+                                <div
+                                  id={bioId}
+                                  class="prose mt-3 hidden max-w-none dark:prose-invert"
+                                  data-director-bio-full
+                                  set:html={toHTML(director.bio)}
+                                />
+                                <button
+                                  type="button"
+                                  class="text-secondary hover:text-primary mt-3 inline-flex items-center gap-1 text-sm font-semibold"
+                                  aria-expanded="false"
+                                  aria-controls={bioId}
+                                  data-director-bio-toggle
+                                >
+                                  <span data-director-bio-label>Read more</span>
+                                  <Icon
+                                    name="tabler:chevron-down"
+                                    class="h-4 w-4 transition-transform"
+                                    data-director-bio-icon
+                                  />
+                                </button>
+                              </>
+                            ) : (
+                              bioPreview.text && (
+                                <div class="prose mt-3 max-w-none dark:prose-invert" set:html={toHTML(director.bio)} />
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )
+    }
+    {
       youtubeEmbedUrl && (
         <section aria-labelledby="recording" class="my-8">
           <h3 id="recording" class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">
@@ -142,24 +279,39 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
         </section>
       )
     }
-    {
-      showInfo.participation_is_open && showInfo.participation && (
-        <>
-          <h3 class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Auditions</h3>
-          <p class="my-2" set:html={toHTML(showInfo.participation.details)} />
-          {showInfo.participation.registration_link && (
-            <a
-              class="btn-secondary mt-4"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={showInfo.participation.registration_link}
-            >
-              Audition Information
-            </a>
-          )}
-        </>
-      )
-    }
+    <script>
+      const initializeDirectorBioToggles = () => {
+        document.querySelectorAll<HTMLButtonElement>('[data-director-bio-toggle]').forEach((button) => {
+          if (button.dataset.directorBioToggleInitialized === 'true') {
+            return;
+          }
+
+          const bio = button.closest('[data-director-bio]');
+          const preview = bio?.querySelector<HTMLElement>('[data-director-bio-preview]');
+          const fullId = button.getAttribute('aria-controls');
+          const full = fullId ? document.getElementById(fullId) : null;
+          const label = button.querySelector<HTMLElement>('[data-director-bio-label]');
+          const icon = button.querySelector<HTMLElement>('[data-director-bio-icon]');
+
+          if (!preview || !full || !label) {
+            return;
+          }
+
+          button.dataset.directorBioToggleInitialized = 'true';
+          button.addEventListener('click', () => {
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+            button.setAttribute('aria-expanded', String(!isExpanded));
+            preview.classList.toggle('hidden', !isExpanded);
+            full.classList.toggle('hidden', isExpanded);
+            label.textContent = isExpanded ? 'Read more' : 'Show less';
+            icon?.classList.toggle('rotate-180', !isExpanded);
+          });
+        });
+      };
+
+      document.addEventListener('astro:page-load', initializeDirectorBioToggles);
+      initializeDirectorBioToggles();
+    </script>
     {
       showInfo.gallery?.images?.length > 0 && (
         <div id="gallery" class="container mx-auto my-8 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">

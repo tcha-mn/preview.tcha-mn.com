@@ -51,6 +51,9 @@ const styleString = Object.entries(style)
       img.removeAttribute('data-loading');
       const lqip = img.previousElementSibling as HTMLImageElement | null;
       if (lqip && lqip.tagName === 'IMG' && lqip.hasAttribute('data-lqip')) {
+        if (!img.getAttribute('alt') && lqip.getAttribute('alt')) {
+          img.setAttribute('alt', lqip.getAttribute('alt') ?? '');
+        }
         lqip.replaceWith(img);
       }
       img.removeEventListener('load', swapImagePreview);

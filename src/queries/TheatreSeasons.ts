@@ -24,6 +24,13 @@ interface QueryOptions extends BaseQueryOptions {
   season: string;
 }
 
+interface ShowDirectorRaw {
+  _id: string;
+  name?: string | null;
+  bio?: PortableTextBlock[] | null;
+  headshot?: StandardImageAsset | null;
+}
+
 const VISIBLE_THEATRE_SEASONS = `_type == "season" && (dateTime(preview_date) < ${now} || dateTime(date_visible) < ${now})`;
 const THEATER_SEASON_FIELDS = `title, "slug": slug.current, description, preview_date, date_visible, "isVisible": dateTime(date_visible) < ${now}`;
 
@@ -103,12 +110,7 @@ interface ShowRaw {
     start: string;
     end: string;
   };
-  directors: {
-    _id: string;
-    name: string;
-    bio: string;
-    headshot: StandardImageAsset;
-  }[];
+  directors?: (ShowDirectorRaw | null)[] | null;
   participation_is_open: boolean;
   participation?: {
     opens: string;
