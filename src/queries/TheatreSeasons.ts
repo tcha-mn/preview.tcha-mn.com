@@ -27,6 +27,7 @@ interface QueryOptions extends BaseQueryOptions {
 interface ShowDirectorRaw {
   _id: string;
   name?: string | null;
+  title?: string | null;
   bio?: PortableTextBlock[] | null;
   headshot?: StandardImageAsset | null;
 }
@@ -41,6 +42,13 @@ const SINGLE_SEASON = ({ season }: QueryOptions) =>
 const SEASON_SHOW_SLUGS = `*[${VISIBLE_THEATRE_SEASONS} && dateTime(date_visible) < ${now}] | order(date_visible desc)
     { "slug": slug.current, "shows": *[_type == "show" && references(^._id)].slug.current }`;
 
+const SHOW_DIRECTOR_FIELDS = ({ picture }: BaseQueryOptions) => `{
+      _id,
+      name,
+      "bio": coalesce(class_type_bio[class_type == "theatre"][0].bio, bio),
+      ${picture('headshot')}
+    }`;
+
 const SHOW_FIELDS = ({ picture }: BaseQueryOptions) => `_id,
     title,
     ${picture('hero')},
@@ -51,11 +59,12 @@ const SHOW_FIELDS = ({ picture }: BaseQueryOptions) => `_id,
       "slug": slug.current
     },
     "slug": slug.current,
-    "directors": directors[]->{
-      _id,
-      name,
-      "bio": coalesce(class_type_bio[class_type == "theatre"][0].bio, bio),
-      ${picture('headshot')}
+    "directors": directors[]{
+      "title": coalesce(title, "Director"),
+      ...select(
+        defined(instructor) => instructor->${SHOW_DIRECTOR_FIELDS({ picture })},
+        defined(_ref) => @->${SHOW_DIRECTOR_FIELDS({ picture })}
+      )
     },
     "participation_is_open": dateTime(participation.opens + "T00:00:00Z") < ${now} && dateTime(participation.deadline + "T00:00:00Z") > ${now},
     participation,

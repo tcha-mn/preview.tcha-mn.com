@@ -37,10 +37,10 @@ const hasYoutubeRecording = Boolean(youtubeRecordingUrl);
 const youtubeEmbedUrl = getYoutubeEmbedUrl(youtubeRecordingUrl);
 type Director = NonNullable<NonNullable<typeof showInfo.directors>[number]>;
 const directors =
-  showInfo.directors?.filter(
-    (director): director is Director => Boolean(director?.name || director?.bio?.length || director?.headshot)
+  showInfo.directors?.filter((director): director is Director =>
+    Boolean(director?.name || director?.bio?.length || director?.headshot)
   ) ?? [];
-const directorsHeading = directors.length === 1 ? 'Director' : 'Directors';
+const directorsHeading = 'Production Leadership';
 const DIRECTOR_BIO_PREVIEW_LENGTH = 420;
 
 interface PortableTextChildWithText {
@@ -60,7 +60,9 @@ function getDirectorBioPreview(bio?: Director['bio']): { isLong: boolean; text: 
     bio
       ?.flatMap((block) => {
         const children = (block as PortableTextBlockWithChildren).children;
-        return Array.isArray(children) ? children.map((child) => (typeof child.text === 'string' ? child.text : '')) : [];
+        return Array.isArray(children)
+          ? children.map((child) => (typeof child.text === 'string' ? child.text : ''))
+          : [];
       })
       .join(' ')
       .replace(/\s+/g, ' ')
@@ -211,20 +213,23 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
                       )}
                       <div class="mt-2 grow basis-7/12">
                         {director.name && (
-                          <h4 class="font-heading mb-2 text-xl leading-tight font-bold sm:text-2xl dark:text-slate-300">
+                          <h4 class="font-heading mb-1 text-xl leading-tight font-bold sm:text-2xl dark:text-slate-300">
                             {director.name}
                           </h4>
+                        )}
+                        {director.title && (
+                          <p class="text-sm font-semibold text-slate-600 dark:text-slate-400">{director.title}</p>
                         )}
                         {director.bio && director.bio.length > 0 && (
                           <div data-director-bio>
                             {bioPreview.isLong ? (
                               <>
-                                <div class="prose mt-3 max-w-none dark:prose-invert" data-director-bio-preview>
+                                <div class="prose dark:prose-invert mt-3 max-w-none" data-director-bio-preview>
                                   <p>{bioPreview.text}</p>
                                 </div>
                                 <div
                                   id={bioId}
-                                  class="prose mt-3 hidden max-w-none dark:prose-invert"
+                                  class="prose dark:prose-invert mt-3 hidden max-w-none"
                                   data-director-bio-full
                                   set:html={toHTML(director.bio)}
                                 />
@@ -245,7 +250,7 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
                               </>
                             ) : (
                               bioPreview.text && (
-                                <div class="prose mt-3 max-w-none dark:prose-invert" set:html={toHTML(director.bio)} />
+                                <div class="prose dark:prose-invert mt-3 max-w-none" set:html={toHTML(director.bio)} />
                               )
                             )}
                           </div>
@@ -274,7 +279,7 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
-            ></iframe>
+            />
           </div>
         </section>
       )
