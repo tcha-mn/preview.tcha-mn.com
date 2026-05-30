@@ -10,8 +10,8 @@ import type { Event } from '../queries/Events';
 import type { StandardImageAsset } from '../types';
 
 const metadata = {
-  title: 'Events Calendar | TCHA',
-  description: 'Calendar of TCHA events, performances, and important dates.',
+  title: 'Upcoming Events | TCHA',
+  description: 'Upcoming TCHA events, performances, and important dates.',
   openGraph: {
     images: [{ url: '~/assets/images/default.png', width: 1200, height: 630 }],
   },
@@ -35,175 +35,7 @@ function getRelatedEntityLabel(entity: Event['related_entities'][number]): strin
 
 <Layout metadata={metadata}>
   <script>
-    import dayjs from 'dayjs';
-    import { Modal } from 'flowbite';
-    import { Calendar } from '@fullcalendar/core';
-    import dayGridPlugin from '@fullcalendar/daygrid';
-    import listPlugin from '@fullcalendar/list';
-    import googleCalendarPlugin from '@fullcalendar/google-calendar';
-
-    let calendar: Calendar | undefined;
-
-    const sanitizeLimitedHtml = (value: string | null | undefined) => {
-      if (!value || typeof value !== 'string') {
-        return '';
-      }
-
-      const allowedTags = new Set(['A', 'B', 'BR']);
-      const doc = new DOMParser().parseFromString(value, 'text/html');
-
-      const sanitizeNode = (node: Node) => {
-        [...node.childNodes].forEach((child) => {
-          if (child instanceof Element) {
-            const element = child;
-            const tagName = element.tagName.toUpperCase();
-
-            if (!allowedTags.has(tagName)) {
-              const textNode = doc.createTextNode(element.textContent || '');
-              element.replaceWith(textNode);
-              return;
-            }
-
-            if (tagName === 'A') {
-              const href = element.getAttribute('href') || '';
-              const isSafeHref =
-                href.startsWith('http://') ||
-                href.startsWith('https://') ||
-                href.startsWith('mailto:') ||
-                href.startsWith('tel:') ||
-                href.startsWith('/');
-
-              const target = element.getAttribute('target') || '';
-              const rel = element.getAttribute('rel') || '';
-
-              [...element.attributes].forEach((attr) => element.removeAttribute(attr.name));
-
-              if (isSafeHref) {
-                element.setAttribute('href', href);
-              }
-              if (target) {
-                element.setAttribute('target', target);
-              }
-              if (target === '_blank') {
-                const relParts = new Set(rel.split(/\s+/).filter(Boolean));
-                relParts.add('noopener');
-                relParts.add('noreferrer');
-                element.setAttribute('rel', [...relParts].join(' '));
-              } else if (rel) {
-                element.setAttribute('rel', rel);
-              }
-            } else {
-              [...element.attributes].forEach((attr) => element.removeAttribute(attr.name));
-            }
-          }
-
-          if (child.childNodes && child.childNodes.length > 0) {
-            sanitizeNode(child);
-          }
-        });
-      };
-
-      sanitizeNode(doc.body);
-      return doc.body.innerHTML;
-    };
-
-    const htmlToText = (value: string | null | undefined) => {
-      if (!value) return '';
-      const div = document.createElement('div');
-      div.innerHTML = value;
-      return (div.textContent || '').trim();
-    };
-
-    const initCalendar = () => {
-      if (calendar) {
-        return;
-      }
-
-      if (!window.location.pathname.startsWith('/events/')) {
-        return;
-      }
-
-      const $modalEl = document.getElementById('eventModal');
-      const eventModal = new Modal($modalEl, {}, { id: 'eventModal', override: true });
-      const closeButton = document.getElementById('eventModal-close');
-      closeButton?.addEventListener('click', () => eventModal.hide());
-
-      var calendarEl = document.getElementById('calendar')!;
-      calendar = new Calendar(calendarEl, {
-        plugins: [dayGridPlugin, listPlugin, googleCalendarPlugin],
-        googleCalendarApiKey: 'AIzaSyDDtm0Kq9peyIES6MurVMzvpj0qxPd57es',
-        events: {
-          googleCalendarId: 'tcha-mn.com_vhub6lsh2nqen4saf0aeb9oe28@group.calendar.google.com',
-        },
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,listMonth',
-        },
-        eventClick(info) {
-          info.jsEvent.preventDefault();
-          const titleEl = document.getElementById('eventModal-title');
-          if (titleEl) {
-            titleEl.textContent = info.event.title || '';
-          }
-
-          const subtitleEl = document.getElementById('eventModal-subtitle');
-          if (subtitleEl) {
-            if (info.event.allDay) {
-              subtitleEl.textContent = 'All Day';
-            } else if (info.event.start && info.event.end) {
-              subtitleEl.textContent = `${dayjs(info.event.start).format('h:mm a')} - ${dayjs(info.event.end).format('h:mm a')}`;
-            } else if (info.event.start) {
-              subtitleEl.textContent = dayjs(info.event.start).format('h:mm a');
-            } else {
-              subtitleEl.textContent = 'Time TBD';
-            }
-          }
-
-          const locationWrapper = document.getElementById('eventModal-location-wrapper');
-          const locationEl = document.getElementById('eventModal-location');
-          const rawLocation = info.event.extendedProps.location || '';
-          const sanitizedLocation = sanitizeLimitedHtml(rawLocation);
-          if (locationWrapper && locationEl) {
-            locationWrapper.hidden = !sanitizedLocation;
-            locationEl.innerHTML = sanitizedLocation;
-            if (sanitizedLocation) {
-              const locationText = htmlToText(sanitizedLocation);
-              if (locationText) {
-                const lineBreak = document.createElement('br');
-                const mapLink = document.createElement('a');
-                mapLink.target = '_blank';
-                mapLink.rel = 'noopener noreferrer';
-                mapLink.href = `https://maps.google.com/?q=${encodeURIComponent(locationText)}`;
-                mapLink.textContent = 'see map';
-                locationEl.appendChild(lineBreak);
-                locationEl.appendChild(document.createTextNode('('));
-                locationEl.appendChild(mapLink);
-                locationEl.appendChild(document.createTextNode(')'));
-              }
-            }
-          }
-
-          const descriptionWrapper = document.getElementById('eventModal-description-wrapper');
-          const descriptionEl = document.getElementById('eventModal-description');
-          const rawDescription = info.event.extendedProps.description || '';
-          const sanitizedDescription = sanitizeLimitedHtml(rawDescription);
-          if (descriptionWrapper && descriptionEl) {
-            descriptionWrapper.hidden = !sanitizedDescription;
-            descriptionEl.innerHTML = sanitizedDescription;
-          }
-          eventModal.show();
-        },
-      });
-      calendar.render();
-    };
-
     const initUpcomingEvents = () => {
-      if (!window.location.pathname.startsWith('/events/')) {
-        return;
-      }
-
       const button = document.querySelector<HTMLButtonElement>('[data-events-show-more]');
       if (!button || button.dataset.eventsShowMoreInitialized === 'true') {
         return;
@@ -234,162 +66,116 @@ function getRelatedEntityLabel(entity: Event['related_entities'][number]): strin
       updateButton();
     };
 
-    document.addEventListener('astro:page-load', initCalendar);
     document.addEventListener('astro:page-load', initUpcomingEvents);
-    document.addEventListener('astro:after-swap', () => {
-      calendar?.destroy();
-      calendar = undefined;
-    });
   </script>
-  {
-    upcomingEvents.length > 0 && (
-      <section class="mx-auto max-w-5xl px-6 py-8 sm:px-6 sm:py-12 lg:py-16" aria-labelledby="upcoming-events">
-        <div class="mx-auto mb-8 max-w-2xl text-center">
-          <h1 id="upcoming-events" class="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-            Upcoming Events
-          </h1>
-          <p class="font-light text-gray-500 sm:text-xl dark:text-gray-400">
-            See upcoming TCHA performances, gatherings, and important dates.
-          </p>
-        </div>
-        <div class="space-y-8">
-          {upcomingEvents.map((event, index) => {
-            const eventImage = getEventImage(event);
-            const firstDate = event.dates[0];
-            const additionalDateCount = event.dates.length - 1;
-            const descriptionHtml = event.description?.length ? toHTML(event.description) : undefined;
-
-            return (
-              <article
-                class="mx-auto max-w-4xl rounded-lg bg-white/70 p-4 shadow-md backdrop-blur md:grid md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-8 dark:bg-slate-800/90"
-                data-event-card
-                hidden={index >= EVENT_PAGE_SIZE}
-              >
-                <div class="overflow-hidden rounded-md bg-gray-200 dark:bg-slate-700">
-                  {eventImage ? (
-                    <SanityImage
-                      image={eventImage}
-                      alt={event.title}
-                      mode="cover"
-                      className="aspect-[4/3] h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div class="flex aspect-[4/3] items-center justify-center bg-gray-100 text-center dark:bg-slate-700">
-                      <div class="text-gray-700 dark:text-gray-200">
-                        <div class="text-sm font-semibold tracking-wide uppercase">{firstDate.toFormat('MMM')}</div>
-                        <div class="font-heading text-5xl font-bold">{firstDate.toFormat('d')}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div class="mt-5 flex flex-col gap-4 md:mt-0">
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
-                    <span class="inline-flex items-center gap-1">
-                      <Icon name="tabler:calendar" class="-mt-0.5 h-4 w-4" />
-                      <time datetime={String(firstDate)}>{formatEventDate(firstDate)}</time>
-                    </span>
-                    {additionalDateCount > 0 && (
-                      <span>
-                        + {additionalDateCount} more {additionalDateCount === 1 ? 'date' : 'dates'}
-                      </span>
-                    )}
-                  </div>
-                  <h2 class="font-heading text-3xl leading-tight font-bold tracking-tighter text-gray-900 dark:text-slate-200">
-                    {event.title}
-                  </h2>
-                  {event.location && (
-                    <p class="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                      <Icon name="tabler:map-pin" class="h-4 w-4" />
-                      {event.location}
-                    </p>
-                  )}
-                  {descriptionHtml && <div class="prose dark:prose-invert max-w-none" set:html={descriptionHtml} />}
-                  {(event.ticket_link || event.related_entities.length > 0) && (
-                    <div class="flex flex-wrap gap-3">
-                      {event.ticket_link && (
-                        <a class="btn-secondary px-4 py-2" href={event.ticket_link}>
-                          Get Tickets
-                        </a>
-                      )}
-                      {event.related_entities.map((entity) => (
-                        <a class="btn-tertiary px-4 py-2" href={entity.href} title={entity.title}>
-                          {getRelatedEntityLabel(entity)}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        {upcomingEvents.length > EVENT_PAGE_SIZE && (
-          <div class="mt-8 text-center">
-            <button
-              type="button"
-              class="btn-secondary px-4 py-2"
-              data-events-show-more
-              data-page-size={EVENT_PAGE_SIZE}
-            >
-              Show more events
-            </button>
-          </div>
-        )}
-      </section>
-    )
-  }
-  <section class="mx-auto max-w-4xl px-6 pb-12 sm:px-6 sm:pb-16 lg:pb-20">
-    <div class="max-w-6xl" id="calendar"></div>
-    <div
-      id="eventModal"
-      tabindex="-1"
-      aria-hidden="true"
-      class="fixed inset-0 z-50 hidden w-full overflow-y-auto bg-black/40 p-4 backdrop-blur-sm md:p-6"
-    >
-      <div class="relative mx-auto w-full max-w-2xl">
-        <!-- Modal content -->
-        <div class="relative rounded-lg bg-white shadow-2xl ring-1 ring-black/10 dark:bg-gray-700">
-          <!-- Modal header -->
-          <div class="flex items-start justify-between rounded-t px-5 pt-4">
-            <h3 id="eventModal-title" class="text-xl font-semibold text-gray-900 lg:text-2xl dark:text-white"></h3>
-            <button
-              id="eventModal-close"
-              type="button"
-              class="ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
-            >
-              <svg
-                class="h-3 w-3"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 14 14"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
-              </svg>
-              <span class="sr-only">Close modal</span>
-            </button>
-          </div>
-          <div class="border-b px-5 pb-2 dark:border-gray-600">
-            <h4 id="eventModal-subtitle" class="text-sm text-gray-600 italic dark:text-gray-300"></h4>
-          </div>
-          <!-- Modal body -->
-          <div class="space-y-6 p-6">
-            <p id="eventModal-description-wrapper" class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-              <b>Description:</b>
-              <span id="eventModal-description"></span>
-            </p>
-            <p id="eventModal-location-wrapper" class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-              <b>Location:</b>
-              <span id="eventModal-location"></span>
-            </p>
-          </div>
-        </div>
+  <section class="mx-auto max-w-5xl px-6 py-8 sm:px-6 sm:py-12 lg:py-16" aria-labelledby="upcoming-events">
+    <div class="mx-auto mb-8 max-w-2xl text-center">
+      <h1 id="upcoming-events" class="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+        Upcoming Events
+      </h1>
+      <p class="font-light text-gray-500 sm:text-xl dark:text-gray-400">
+        See upcoming TCHA performances, gatherings, and important dates.
+      </p>
+      <div class="mt-5">
+        <a class="btn-secondary px-4 py-2" href="/events/calendar/">View full calendar</a>
       </div>
     </div>
+    {
+      upcomingEvents.length > 0 ? (
+        <>
+          <div class="space-y-8">
+            {upcomingEvents.map((event, index) => {
+              const eventImage = getEventImage(event);
+              const firstDate = event.dates[0];
+              const additionalDateCount = event.dates.length - 1;
+              const descriptionHtml = event.description?.length ? toHTML(event.description) : undefined;
+
+              return (
+                <article
+                  class="mx-auto max-w-4xl rounded-lg bg-white/70 p-4 shadow-md backdrop-blur md:grid md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-8 dark:bg-slate-800/90"
+                  data-event-card
+                  hidden={index >= EVENT_PAGE_SIZE}
+                >
+                  <div class="overflow-hidden rounded-md bg-gray-200 dark:bg-slate-700">
+                    {eventImage ? (
+                      <SanityImage
+                        image={eventImage}
+                        alt={event.title}
+                        mode="cover"
+                        className="aspect-[4/3] h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div class="flex aspect-[4/3] items-center justify-center bg-gray-100 text-center dark:bg-slate-700">
+                        <div class="text-gray-700 dark:text-gray-200">
+                          <div class="text-sm font-semibold tracking-wide uppercase">{firstDate.toFormat('MMM')}</div>
+                          <div class="font-heading text-5xl font-bold">{firstDate.toFormat('d')}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div class="mt-5 flex flex-col gap-4 md:mt-0">
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
+                      <span class="inline-flex items-center gap-1">
+                        <Icon name="tabler:calendar" class="-mt-0.5 h-4 w-4" />
+                        <time datetime={String(firstDate)}>{formatEventDate(firstDate)}</time>
+                      </span>
+                      {additionalDateCount > 0 && (
+                        <span>
+                          + {additionalDateCount} more {additionalDateCount === 1 ? 'date' : 'dates'}
+                        </span>
+                      )}
+                    </div>
+                    <h2 class="font-heading text-3xl leading-tight font-bold tracking-tighter text-gray-900 dark:text-slate-200">
+                      {event.title}
+                    </h2>
+                    {event.location && (
+                      <p class="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                        <Icon name="tabler:map-pin" class="h-4 w-4" />
+                        {event.location}
+                      </p>
+                    )}
+                    {descriptionHtml && <div class="prose dark:prose-invert max-w-none" set:html={descriptionHtml} />}
+                    {(event.ticket_link || event.related_entities.length > 0) && (
+                      <div class="flex flex-wrap gap-3">
+                        {event.ticket_link && (
+                          <a class="btn-secondary px-4 py-2" href={event.ticket_link}>
+                            Get Tickets
+                          </a>
+                        )}
+                        {event.related_entities.map((entity) => (
+                          <a class="btn-tertiary px-4 py-2" href={entity.href} title={entity.title}>
+                            {getRelatedEntityLabel(entity)}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          {upcomingEvents.length > EVENT_PAGE_SIZE && (
+            <div class="mt-8 text-center">
+              <button
+                type="button"
+                class="btn-secondary px-4 py-2"
+                data-events-show-more
+                data-page-size={EVENT_PAGE_SIZE}
+              >
+                Show more events
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div class="mx-auto max-w-2xl rounded-lg bg-white/70 p-6 text-center shadow-md backdrop-blur dark:bg-slate-800/90">
+          <p class="text-lg font-semibold text-gray-900 dark:text-white">No upcoming events are posted right now.</p>
+          <p class="text-muted mt-2">Check the full calendar for rehearsals, classes, and other scheduled dates.</p>
+          <a class="btn-secondary mt-5 px-4 py-2" href="/events/calendar/">
+            View full calendar
+          </a>
+        </div>
+      )
+    }
   </section>
 </Layout>

@@ -110,8 +110,12 @@ export const headerData = {
         //   dividerAfter: true,
         // },
         {
-          text: 'Calendar',
+          text: 'Upcoming Events',
           href: `${SITE.base}/events/`,
+        },
+        {
+          text: 'Calendar',
+          href: `${SITE.base}/events/calendar/`,
         },
         ...getPageMenuItems('Events'),
       ],
@@ -145,7 +149,8 @@ export const footerData = {
       title: 'Events',
       links: [
         { text: 'Theatre', href: '/theatre/2025-2026/' },
-        { text: 'Calendar', href: '/events/' },
+        { text: 'Upcoming Events', href: '/events/' },
+        { text: 'Calendar', href: '/events/calendar/' },
       ],
     },
   ],
