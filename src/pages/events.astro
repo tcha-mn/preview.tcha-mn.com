@@ -312,7 +312,7 @@ function getRelatedEntityLabel(entity: Event['related_entities'][number]): strin
                         </a>
                       )}
                       {event.related_entities.map((entity) => (
-                        <a class="btn-secondary px-4 py-2" href={entity.href} title={entity.title}>
+                        <a class="btn-tertiary px-4 py-2" href={entity.href} title={entity.title}>
                           {getRelatedEntityLabel(entity)}
                         </a>
                       ))}

@@ -91,11 +91,6 @@ export const headerData = {
           href: `${SITE.base}/auditions/`,
           dividerAfter: true,
         },
-        {
-          text: 'Gala',
-          href: 'https://tchagala2026.rsvpify.com',
-          dividerAfter: true,
-        },
         ...seasons.map((s) => {
           if (!s.isVisible) {
             return { text: `${s.title} Season (coming soon!)` };
@@ -109,6 +104,11 @@ export const headerData = {
       id: 'events',
       text: 'Events',
       links: [
+        // {
+        //   text: 'Gala',
+        //   href: 'https://tchagala2026.rsvpify.com',
+        //   dividerAfter: true,
+        // },
         {
           text: 'Calendar',
           href: `${SITE.base}/events/`,
