@@ -229,7 +229,7 @@ const { classItem } = Astro.props;
           </span>
         </div>
       </div>
-      <div set:html={toHTML(classItem.description)} />
+      <div class="prose dark:prose-invert max-w-none" set:html={toHTML(classItem.description)} />
       <h4
         id={'class-' + classItem._id + '-instructor-heading'}
         class="mt-4 mb-4 inline-flex items-center text-xl font-semibold dark:text-white"
