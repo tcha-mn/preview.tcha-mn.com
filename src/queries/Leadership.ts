@@ -10,11 +10,16 @@ interface Leadership {
 }
 export interface LeadershipTeam {
   board: Leadership[];
-  theatre_artistic_directors: Leadership[];
+  staff: Leadership[];
 }
 
 const QUERY = ({ picture }: BaseQueryOptions) => groq`{
   "board": *[_type == "leadership" && team == "Board"] | order(name) {
+    name,
+    role,
+    ${picture('headshot')}
+  },
+  "staff": *[_type == "leadership" && team == "Staff"] | order(name) {
     name,
     role,
     ${picture('headshot')}
