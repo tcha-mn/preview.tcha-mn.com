@@ -1,5 +1,13 @@
 ---
+import { Icon } from 'astro-icon/components';
+import { toHTML } from '@portabletext/to-html';
+import { DateTime } from 'luxon';
+
+import SanityImage from '../components/common/SanityImage.astro';
 import Layout from '../layouts/PageLayout.astro';
+import { getUpcomingEvents } from '../queries/Events';
+import type { Event } from '../queries/Events';
+import type { StandardImageAsset } from '../types';
 
 const metadata = {
   title: 'Events Calendar | TCHA',
@@ -8,6 +16,21 @@ const metadata = {
     images: [{ url: '~/assets/images/default.png', width: 1200, height: 630 }],
   },
 };
+
+const upcomingEvents = await getUpcomingEvents();
+const EVENT_PAGE_SIZE = 4;
+
+function formatEventDate(date: DateTime): string {
+  return date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
+}
+
+function getEventImage(event: Event): StandardImageAsset | null {
+  return event.thumbnail ?? event.hero;
+}
+
+function getRelatedEntityLabel(entity: Event['related_entities'][number]): string {
+  return entity.type === 'show' ? 'View Show Details' : 'View Class Details';
+}
 ---
 
 <Layout metadata={metadata}>
@@ -175,12 +198,146 @@ const metadata = {
       });
       calendar.render();
     };
+
+    const initUpcomingEvents = () => {
+      if (!window.location.pathname.startsWith('/events/')) {
+        return;
+      }
+
+      const button = document.querySelector<HTMLButtonElement>('[data-events-show-more]');
+      if (!button || button.dataset.eventsShowMoreInitialized === 'true') {
+        return;
+      }
+
+      const cards = [...document.querySelectorAll<HTMLElement>('[data-event-card]')];
+      const pageSize = Number(button.dataset.pageSize || '4');
+
+      const updateButton = () => {
+        const hiddenCount = cards.filter((card) => card.hidden).length;
+        button.hidden = hiddenCount === 0;
+        button.textContent =
+          hiddenCount > pageSize
+            ? `Show ${pageSize} more events`
+            : `Show ${hiddenCount} more ${hiddenCount === 1 ? 'event' : 'events'}`;
+      };
+
+      button.dataset.eventsShowMoreInitialized = 'true';
+      button.addEventListener('click', () => {
+        cards
+          .filter((card) => card.hidden)
+          .slice(0, pageSize)
+          .forEach((card) => {
+            card.hidden = false;
+          });
+        updateButton();
+      });
+      updateButton();
+    };
+
     document.addEventListener('astro:page-load', initCalendar);
+    document.addEventListener('astro:page-load', initUpcomingEvents);
     document.addEventListener('astro:after-swap', () => {
       calendar?.destroy();
       calendar = undefined;
     });
   </script>
+  {
+    upcomingEvents.length > 0 && (
+      <section class="mx-auto max-w-5xl px-6 py-8 sm:px-6 sm:py-12 lg:py-16" aria-labelledby="upcoming-events">
+        <div class="mx-auto mb-8 max-w-2xl text-center">
+          <h1 id="upcoming-events" class="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            Upcoming Events
+          </h1>
+          <p class="font-light text-gray-500 sm:text-xl dark:text-gray-400">
+            See upcoming TCHA performances, gatherings, and important dates.
+          </p>
+        </div>
+        <div class="space-y-8">
+          {upcomingEvents.map((event, index) => {
+            const eventImage = getEventImage(event);
+            const firstDate = event.dates[0];
+            const additionalDateCount = event.dates.length - 1;
+            const descriptionHtml = event.description?.length ? toHTML(event.description) : undefined;
+
+            return (
+              <article
+                class="mx-auto max-w-4xl rounded-lg bg-white/70 p-4 shadow-md backdrop-blur md:grid md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-8 dark:bg-slate-800/90"
+                data-event-card
+                hidden={index >= EVENT_PAGE_SIZE}
+              >
+                <div class="overflow-hidden rounded-md bg-gray-200 dark:bg-slate-700">
+                  {eventImage ? (
+                    <SanityImage
+                      image={eventImage}
+                      alt={event.title}
+                      mode="cover"
+                      className="aspect-[4/3] h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div class="flex aspect-[4/3] items-center justify-center bg-gray-100 text-center dark:bg-slate-700">
+                      <div class="text-gray-700 dark:text-gray-200">
+                        <div class="text-sm font-semibold tracking-wide uppercase">{firstDate.toFormat('MMM')}</div>
+                        <div class="font-heading text-5xl font-bold">{firstDate.toFormat('d')}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div class="mt-5 flex flex-col gap-4 md:mt-0">
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <span class="inline-flex items-center gap-1">
+                      <Icon name="tabler:calendar" class="-mt-0.5 h-4 w-4" />
+                      <time datetime={String(firstDate)}>{formatEventDate(firstDate)}</time>
+                    </span>
+                    {additionalDateCount > 0 && (
+                      <span>
+                        + {additionalDateCount} more {additionalDateCount === 1 ? 'date' : 'dates'}
+                      </span>
+                    )}
+                  </div>
+                  <h2 class="font-heading text-3xl leading-tight font-bold tracking-tighter text-gray-900 dark:text-slate-200">
+                    {event.title}
+                  </h2>
+                  {event.location && (
+                    <p class="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                      <Icon name="tabler:map-pin" class="h-4 w-4" />
+                      {event.location}
+                    </p>
+                  )}
+                  {descriptionHtml && <div class="prose dark:prose-invert max-w-none" set:html={descriptionHtml} />}
+                  {(event.ticket_link || event.related_entities.length > 0) && (
+                    <div class="flex flex-wrap gap-3">
+                      {event.ticket_link && (
+                        <a class="btn-secondary px-4 py-2" href={event.ticket_link}>
+                          Get Tickets
+                        </a>
+                      )}
+                      {event.related_entities.map((entity) => (
+                        <a class="btn-secondary px-4 py-2" href={entity.href} title={entity.title}>
+                          {getRelatedEntityLabel(entity)}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {upcomingEvents.length > EVENT_PAGE_SIZE && (
+          <div class="mt-8 text-center">
+            <button
+              type="button"
+              class="btn-secondary px-4 py-2"
+              data-events-show-more
+              data-page-size={EVENT_PAGE_SIZE}
+            >
+              Show more events
+            </button>
+          </div>
+        )}
+      </section>
+    )
+  }
   <section class="mx-auto max-w-4xl px-6 pb-12 sm:px-6 sm:pb-16 lg:pb-20">
     <div class="max-w-6xl" id="calendar"></div>
     <div
