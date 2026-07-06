@@ -3,6 +3,7 @@ import { CLASS_QUERY_FRAGMENT, parseRawClassArray } from './Classes';
 
 const OPEN_CLASS_RESTRICTION_FRAGMENT = `*[
   _type == "class"
+  && is_cancelled != true
   && ${groqDateTimeFromDate('coalesce(registration_open, semester->.registration_open)')} < ${now}
   && ${groqDateTimeFromDate('coalesce(registration_close, coalesce(dates.start, semester->.dates.start))')} > (${now} - 60*60*24)
 ]`;

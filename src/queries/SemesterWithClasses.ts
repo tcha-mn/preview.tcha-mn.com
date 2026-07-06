@@ -30,6 +30,7 @@ const QUERY = ({ classType, registration, picture }: QueryOptions) => `
     _type == "class"
     ${classType ? ' && class_type == "' + classType + '"' : ''} &&
     references(^._id) &&
+    is_cancelled != true &&
     ${groqDateTimeFromDate('coalesce(dates, ^.dates).end')} > ${now}
   ] | order(age_minimum, age_maximum, title) ${CLASS_QUERY_FRAGMENT({ picture, includeInstructors: true })}
 }`;
