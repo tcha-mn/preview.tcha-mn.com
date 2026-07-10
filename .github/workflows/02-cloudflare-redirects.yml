@@ -30,7 +30,7 @@ jobs:
       MODE: ${{ inputs.mode || github.event.client_payload.mode || (github.event_name == 'repository_dispatch' && 'apply') || 'check' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node
         uses: actions/setup-node@v6
