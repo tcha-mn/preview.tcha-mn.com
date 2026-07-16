@@ -10,7 +10,7 @@ import sanityIntegration from '@sanity/astro';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
-const CURRENT_THEATRE_SEASON = '2025-2026';
+const CURRENT_THEATRE_SEASON = '2026-2027';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const whenExternalScripts = (items = []) =>
