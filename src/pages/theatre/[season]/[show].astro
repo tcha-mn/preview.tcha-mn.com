@@ -23,6 +23,7 @@ const { season, show } = Astro.params;
 const showInfo = await fetchShowInfo({ slug: show });
 const seasonInfo = await fetchOne({ season });
 const events = await getRelatedEvents({ show });
+const event = events[0];
 const ogImage = showInfo.hero ? urlFor(showInfo.hero).url() : '';
 const metadata = {
   title: `${showInfo.title} | ${seasonInfo.title} | TCHA`,
@@ -80,6 +81,10 @@ function getDirectorBioPreview(bio?: Director['bio']): { isLong: boolean; text: 
 
 function formatDate(date: DateTime): string {
   return date.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY);
+}
+
+function formatDateTime(date: DateTime): string {
+  return date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
 }
 
 function getYoutubeEmbedUrl(url?: string | null): string | undefined {
@@ -180,6 +185,22 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
               Audition Information
             </a>
           )}
+        </>
+      )
+    }
+    {
+      event?.dates?.length > 0 && (
+        <>
+          <h3 class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Performances</h3>
+          <div class="my-2">
+            <ul class="list-disc pl-5">
+              {event.dates.map((date) => (
+                <li>
+                  <time datetime={String(date)}>{formatDateTime(date)}</time>
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )
     }
