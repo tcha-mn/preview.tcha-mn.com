@@ -26,7 +26,7 @@ export interface RelatedEntity {
 }
 
 interface EventRaw {
-  dates: string[];
+  dates: EventDateRaw[];
   publish_date: string;
   ticket_link: string | null;
   description: null | PortableTextBlock[];
@@ -42,10 +42,20 @@ interface EventRaw {
   related_entities: RelatedEntityRaw[] | null;
 }
 
+interface EventDateRaw {
+  date: string;
+  note?: PortableTextBlock[] | null;
+}
+
 interface EventParsed extends Omit<EventRaw, 'dates' | 'publish_date' | 'related_entities'> {
-  dates: DateTime[];
+  dates: EventDate[];
   publish_date: DateTime;
   related_entities: RelatedEntity[];
+}
+
+export interface EventDate {
+  date: DateTime;
+  note: PortableTextBlock[];
 }
 
 interface RelatedQueryOpts extends BaseQueryOptions {
@@ -78,7 +88,7 @@ const RELATED_EVENTS_QUERY = ({ classType, show, picture }: RelatedQueryOpts) =>
   && ${groqDateTimeFromDate('publish_date')} < ${now}
   ${classType ? `&& "class" in related_entities[]->_type && "${classType}" in related_entities[]->class_type` : ''}
   ${show ? `&& "show" in related_entities[]->_type && "${show}" in related_entities[]->slug.current` : ''}
-  && count(dates[@ > now()]) > 0] { ${EVENT_FIELDS({ picture })} }
+  && count(dates[date > now()]) > 0] { ${EVENT_FIELDS({ picture })} }
 `;
 
 interface EventDetailsQueryOpts extends BaseQueryOptions {
@@ -89,7 +99,7 @@ const FEATURED_EVENTS_QUERY = ({ picture }: BaseQueryOptions) => `
 *[_type=="event"
   && announce
   && ${groqDateTimeFromDate('publish_date')} < ${now}
-  && count(dates[@ > now()]) > 0] | order(dates[0]) {
+  && count(dates[date > now()]) > 0] | order(dates[0].date) {
     ${EVENT_FIELDS({ picture })}
   }
 `;
@@ -97,7 +107,7 @@ const FEATURED_EVENTS_QUERY = ({ picture }: BaseQueryOptions) => `
 const UPCOMING_EVENTS_QUERY = ({ picture }: BaseQueryOptions) => `
 *[_type=="event"
   && ${groqDateTimeFromDate('publish_date')} < ${now}
-  && count(dates[@ > now()]) > 0] {
+  && count(dates[date > now()]) > 0] {
     ${EVENT_FIELDS({ picture })}
   }
 `;
@@ -108,7 +118,10 @@ const EVENT_DETAILS = ({ eventSlug, picture }: EventDetailsQueryOpts) =>
 function processResults(raw: EventRaw[]): EventParsed[] {
   return raw.map((event) => ({
     ...event,
-    dates: event.dates.map((date) => parseDate(date)),
+    dates: event.dates.map((performance) => ({
+      date: parseDate(performance.date),
+      note: performance.note ?? [],
+    })),
     publish_date: parseDate(event.publish_date),
     related_entities: normalizeRelatedEntities(event.related_entities),
   }));
@@ -144,10 +157,10 @@ function processUpcomingResults(raw: EventRaw[]): EventParsed[] {
   return processResults(raw)
     .map((event) => ({
       ...event,
-      dates: event.dates.filter((date) => date.toMillis() > nowDateTime.toMillis()),
+      dates: event.dates.filter((performance) => performance.date.toMillis() > nowDateTime.toMillis()),
     }))
     .filter((event) => event.dates.length > 0)
-    .sort((a, b) => a.dates[0].toMillis() - b.dates[0].toMillis());
+    .sort((a, b) => a.dates[0].date.toMillis() - b.dates[0].date.toMillis());
 }
 
 export const getRelatedEvents = makeDynamicDataAccess(RELATED_EVENTS_QUERY, processResults);

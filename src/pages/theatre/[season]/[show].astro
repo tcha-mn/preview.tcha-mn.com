@@ -6,6 +6,7 @@ import { Icon } from 'astro-icon/components';
 
 import Hero from '../../../components/widgets/Hero.astro';
 import Layout from '../../../layouts/PageLayout.astro';
+import PerformanceDates from '../../../components/theatre/PerformanceDates.astro';
 import { getRelatedEvents } from '../../../queries/Events';
 import { fetchOne, fetchShowInfo, fetchSlugs } from '../../../queries/TheatreSeasons';
 import SanityImage from '../../../components/common/SanityImage.astro';
@@ -81,10 +82,6 @@ function getDirectorBioPreview(bio?: Director['bio']): { isLong: boolean; text: 
 
 function formatDate(date: DateTime): string {
   return date.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY);
-}
-
-function formatDateTime(date: DateTime): string {
-  return date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
 }
 
 function getYoutubeEmbedUrl(url?: string | null): string | undefined {
@@ -192,15 +189,7 @@ function getYoutubeEmbedUrl(url?: string | null): string | undefined {
       event?.dates?.length > 0 && (
         <>
           <h3 class="my-2 text-base font-bold sm:text-xl dark:text-slate-300">Performances</h3>
-          <div class="my-2">
-            <ul class="list-disc pl-5">
-              {event.dates.map((date) => (
-                <li>
-                  <time datetime={String(date)}>{formatDateTime(date)}</time>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <PerformanceDates dates={event.dates} />
         </>
       )
     }

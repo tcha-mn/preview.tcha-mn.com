@@ -86,7 +86,7 @@ function getRelatedEntityLabel(entity: Event['related_entities'][number]): strin
           <div class="space-y-8">
             {upcomingEvents.map((event, index) => {
               const eventImage = getEventImage(event);
-              const firstDate = event.dates[0];
+              const firstDate = event.dates[0].date;
               const additionalDateCount = event.dates.length - 1;
               const descriptionHtml = event.description?.length ? toHTML(event.description) : undefined;
 
