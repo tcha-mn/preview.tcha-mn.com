@@ -92,7 +92,7 @@ const showsWithUpcomingAuditions = await fetchAuditions();
                         </h3>
                         {show.participation?.details?.length ? (
                           <div
-                            class="prose prose-gray max-w-none text-gray-700 dark:text-gray-300"
+                            class="audition-participation-details prose prose-gray max-w-none text-gray-700 dark:text-gray-300"
                             set:html={toHTML(show.participation.details)}
                           />
                         ) : (

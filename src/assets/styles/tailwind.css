@@ -105,3 +105,25 @@
 .dd *:first-child {
   margin-top: 0;
 }
+
+.audition-participation-details a {
+  color: var(--aw-color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+.dark .audition-participation-details a {
+  color: var(--aw-color-secondary);
+}
+
+.audition-participation-details a:hover {
+  text-decoration-color: var(--aw-color-secondary);
+}
+
+.audition-participation-details a:focus-visible {
+  border-radius: 0.125rem;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
