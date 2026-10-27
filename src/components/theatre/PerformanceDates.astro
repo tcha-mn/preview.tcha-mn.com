@@ -45,7 +45,7 @@ function formatDateTime(date: DateTime): string {
           {footnotes.map(({ marker, note }) => (
             <li id={`${idPrefix}-note-${marker}`} class="flex gap-2">
               <span aria-hidden="true">{marker}.</span>
-              <div class="prose dark:prose-invert max-w-none" set:html={toHTML(note)} />
+              <div class="rich-text-links prose dark:prose-invert max-w-none" set:html={toHTML(note)} />
             </li>
           ))}
         </ol>

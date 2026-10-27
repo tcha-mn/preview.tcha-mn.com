@@ -106,7 +106,7 @@
   margin-top: 0;
 }
 
-.audition-participation-details a {
+.rich-text-links a {
   color: var(--aw-color-primary);
   font-weight: 600;
   text-decoration: underline;
@@ -114,15 +114,15 @@
   text-underline-offset: 0.2em;
 }
 
-.dark .audition-participation-details a {
+.dark .rich-text-links a {
   color: var(--aw-color-secondary);
 }
 
-.audition-participation-details a:hover {
+.rich-text-links a:hover {
   text-decoration-color: var(--aw-color-secondary);
 }
 
-.audition-participation-details a:focus-visible {
+.rich-text-links a:focus-visible {
   border-radius: 0.125rem;
   outline: 2px solid currentColor;
   outline-offset: 2px;
