@@ -7,5 +7,6 @@ export default {
   trailingComma: 'es5',
   useTabs: false,
   plugins: ['prettier-plugin-astro', 'prettier-plugin-tailwindcss'],
+  tailwindStylesheet: './src/assets/styles/tailwind.css',
   overrides: [{ files: '*.astro', options: { parser: 'astro' } }],
 };
