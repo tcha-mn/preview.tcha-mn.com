@@ -1,6 +1,6 @@
 import type { ClientConfig } from '@sanity/client';
 import fs from 'node:fs';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 import merge from 'lodash.merge';
 
 import type { MetaData } from '~/types';
@@ -68,7 +68,7 @@ export interface AnalyticsConfig {
   };
 }
 
-const config = yaml.load(fs.readFileSync('src/config.yaml', 'utf8')) as {
+const config = load(fs.readFileSync('src/config.yaml', 'utf8')) as {
   site?: SiteConfig;
   sanity?: ClientConfig;
   metadata?: MetaDataConfig;
