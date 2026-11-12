@@ -1,5 +1,8 @@
 ---
 import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import { DateTime } from 'luxon';
+import SanityImage from '../components/common/SanityImage.astro';
 import Layout from '../layouts/PageLayout.astro';
 
 import Brands from '../components/widgets/Brands.astro';
@@ -11,6 +14,7 @@ import { fetchAll as fetchAllTestimonials } from '../queries/Testimonials';
 import { fetchActive as fetchActiveSponsors } from '../queries/Sponsors';
 import type { CallToAction as HeroCallToAction } from '../types';
 import { isRegistrationOpen } from '../queries/Registration';
+import { getFeaturedEvents } from '../queries/Events';
 import { findLocalImage } from '../utils/images';
 
 import WidgetWrapper from '../components/ui/WidgetWrapper.astro';
@@ -29,6 +33,9 @@ const metadata = {
 const sponsors = await fetchActiveSponsors();
 const testimonials = await fetchAllTestimonials();
 const registrationIsOpen = await isRegistrationOpen();
+const featuredEvent = (await getFeaturedEvents())[0];
+const featuredEventImage = featuredEvent?.thumbnail ?? featuredEvent?.hero;
+const featuredShow = featuredEvent?.related_entities.find((entity) => entity.type === 'show');
 const heroActions: HeroCallToAction[] = [{ text: 'Learn more', href: '/about/', variant: 'primary' }];
 if (registrationIsOpen) {
   heroActions.unshift({
@@ -59,6 +66,75 @@ if (registrationIsOpen) {
       </Fragment>
     </Hero>
   </WidgetWrapper>
+
+  {featuredEvent && (
+    <section class="mx-auto max-w-6xl px-6 py-10 sm:py-14" aria-labelledby="featured-event-heading">
+      <article class="overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 md:grid md:grid-cols-2 dark:bg-slate-800">
+        {featuredEventImage ? (
+          <div class="min-h-64 overflow-hidden bg-gray-100 dark:bg-slate-700">
+            <SanityImage
+              image={featuredEventImage}
+              alt={featuredEvent.title}
+              mode="cover"
+              className="h-full min-h-64 w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div class="flex min-h-64 flex-col items-center justify-center bg-primary text-white">
+            <span class="text-lg font-semibold uppercase">
+              {featuredEvent.dates[0].date.toFormat('MMM')}
+            </span>
+            <span class="font-heading text-7xl font-bold">{featuredEvent.dates[0].date.toFormat('d')}</span>
+          </div>
+        )}
+        <div class="flex flex-col justify-center gap-4 p-6 sm:p-8">
+          <p class="text-primary text-sm font-semibold tracking-wide uppercase">
+            {featuredEvent.announcement?.headline || 'Coming up'}
+          </p>
+          <div>
+            <h2
+              id="featured-event-heading"
+              class="font-heading text-3xl font-bold tracking-tight text-gray-900 dark:text-white"
+            >
+              {featuredEvent.title}
+            </h2>
+            {featuredEvent.announcement?.description && (
+              <p class="mt-3 text-gray-600 dark:text-gray-300">{featuredEvent.announcement.description}</p>
+            )}
+          </div>
+          <div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <p class="inline-flex items-center gap-2">
+              <Icon name="tabler:calendar" class="h-4 w-4 shrink-0" />
+              <time datetime={featuredEvent.dates[0].date.toISO() ?? ''}>
+                {featuredEvent.dates[0].date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)}
+              </time>
+            </p>
+            {featuredEvent.location && (
+              <p class="inline-flex items-center gap-2">
+                <Icon name="tabler:map-pin" class="h-4 w-4 shrink-0" />
+                {featuredEvent.location}
+              </p>
+            )}
+          </div>
+          <div class="flex flex-wrap gap-3">
+            {featuredEvent.ticket_link && (
+              <a class="btn-secondary px-4 py-2" href={featuredEvent.ticket_link}>
+                Get Tickets
+              </a>
+            )}
+            {featuredShow && (
+              <a class="btn-tertiary px-4 py-2" href={featuredShow.href}>
+                View Show Details
+              </a>
+            )}
+            <a class="btn-tertiary px-4 py-2" href="/events/">
+              View all events
+            </a>
+          </div>
+        </div>
+      </article>
+    </section>
+  )}
 
   <Features
     id="features"

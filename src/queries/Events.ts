@@ -33,9 +33,9 @@ interface EventRaw {
   thumbnail: StandardImageAsset | null;
   hero: StandardImageAsset | null;
   announcement: {
-    headline: string;
-    description: string;
-  };
+    headline: string | null;
+    description: string | null;
+  } | null;
   slug: string;
   title: string;
   location: string;
@@ -99,7 +99,7 @@ const FEATURED_EVENTS_QUERY = ({ picture }: BaseQueryOptions) => `
 *[_type=="event"
   && announce
   && ${groqDateTimeFromDate('publish_date')} < ${now}
-  && count(dates[date > now()]) > 0] | order(dates[0].date) {
+  && count(dates[date > now()]) > 0] {
     ${EVENT_FIELDS({ picture })}
   }
 `;
@@ -165,7 +165,7 @@ function processUpcomingResults(raw: EventRaw[]): EventParsed[] {
 
 export const getRelatedEvents = makeDynamicDataAccess(RELATED_EVENTS_QUERY, processResults);
 export const lookupEvent = makeDynamicDataAccess(EVENT_DETAILS, processResults);
-export const getFeaturedEvents = makeDynamicDataAccess(FEATURED_EVENTS_QUERY, processResults);
+export const getFeaturedEvents = makeDataAccess(FEATURED_EVENTS_QUERY, processUpcomingResults);
 export const getUpcomingEvents = makeDataAccess(UPCOMING_EVENTS_QUERY, processUpcomingResults);
 
 export type { EventParsed as Event };
