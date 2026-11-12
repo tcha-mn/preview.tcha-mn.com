@@ -40,7 +40,7 @@ import '@fontsource/lato';
     ::selection {
       background-color: lavender;
     }
-    --fc-small-font-size: 0.65em;
+    --fc-classic-background: rgb(255 255 255);
   }
 
   .dark {
@@ -62,10 +62,42 @@ import '@fontsource/lato';
       color: snow;
     }
 
-    --fc-small-font-size: 0.65em;
-    --fc-page-bg-color: rgb(3 6 32);
-    --fc-neutral-bg-color: rgb(20 27 45);
-    --fc-list-event-hover-bg-color: rgb(30 41 59);
+    --fc-classic-background: rgb(3 6 32);
+    --fc-classic-muted: rgb(20 27 45);
+  }
+
+  html .tcha-calendar-toolbar-title {
+    font-size: 1.75em;
+  }
+
+  html .tcha-calendar-button,
+  html .tcha-calendar-day-header-inner,
+  html .tcha-calendar-date-number {
+    font-size: inherit;
+  }
+
+  html .tcha-calendar-icon-only-button {
+    min-height: calc(1.5em + 18px);
+  }
+
+  html .tcha-calendar-event {
+    font-size: 0.65em;
+  }
+
+  html .tcha-calendar-event-inner {
+    font-size: inherit;
+  }
+
+  html .tcha-calendar-more-link-inner {
+    font-size: 0.65em;
+  }
+
+  html .tcha-calendar {
+    font-size: inherit;
+  }
+
+  .tcha-calendar-day-header {
+    font-weight: 700;
   }
   /* --aw-color-accent: rgb(194, 61, 76); */
 </style>
