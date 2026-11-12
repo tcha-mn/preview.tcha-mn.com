@@ -54,6 +54,30 @@ const { language, textDirection } = I18N;
       document.addEventListener('astro:page-load', hydrateFlowbite);
       document.addEventListener('astro:after-swap', hydrateFlowbite);
     </script>
+    <script>
+      let destroyEventsCalendar: (() => void) | undefined;
+      let eventsCalendarNavigation = 0;
+
+      document.addEventListener('astro:before-swap', () => {
+        eventsCalendarNavigation += 1;
+        destroyEventsCalendar?.();
+        destroyEventsCalendar = undefined;
+      });
+
+      document.addEventListener('astro:page-load', () => {
+        const calendarElement = document.getElementById('calendar');
+        if (!calendarElement) return;
+
+        const navigation = eventsCalendarNavigation;
+        void import('../scripts/events-calendar').then(({ mountEventsCalendar }) => {
+          if (navigation !== eventsCalendarNavigation || document.getElementById('calendar') !== calendarElement) {
+            return;
+          }
+
+          destroyEventsCalendar = mountEventsCalendar();
+        });
+      });
+    </script>
     <GiveButterDonateModal />
     <Subscribe />
   </body>
