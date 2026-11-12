@@ -1,7 +1,13 @@
 ---
 import { Icon } from 'astro-icon/components';
 
-const { text, links, currentPath } = Astro.props;
+interface Props {
+  text?: string;
+  links?: Array<{ text?: string; href?: string; dividerAfter?: boolean }>;
+  currentPath: string;
+}
+
+const { text, links = [], currentPath } = Astro.props;
 ---
 
 <>
